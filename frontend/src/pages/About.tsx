@@ -34,13 +34,13 @@ export const About = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 group card-terminal !p-0">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 group card-terminal p-8 flex items-center justify-center">
             <img 
               src="/community_safety_team_1777093131227.png" 
               alt="Safety Team" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100"
+              className="w-3/4 rounded-2xl object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100 shadow-2xl shadow-accent-primary/20"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent pointer-events-none"></div>
           </div>
           <div className="flex flex-col justify-center space-y-8">
             <h2 className="text-4xl font-heading font-bold text-accent-primary uppercase tracking-tight">Our System</h2>

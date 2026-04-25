@@ -24,6 +24,7 @@ pub struct CreateIncidentRequest {
 #[derive(Deserialize)]
 pub struct UpdateStatusRequest {
     pub status: String,
+    pub emergency_type: Option<String>,
 }
 
 pub async fn list_incidents(
@@ -51,18 +52,7 @@ pub async fn create_incident(
 ) -> Result<Json<Incident>, AppError> {
     let id = Uuid::new_v4();
 
-    let parsed_ai = crate::handlers::ai::parse_emergency_data(&payload.panic_message).await;
-
-    let (emergency_type, severity, details, ai_advice) = match parsed_ai {
-        Some(p) => (Some(p.emergency_type), p.severity, Some(p.details), Some(p.ai_advice)),
-        None => (
-            Some("Other".to_string()), 
-            "high".to_string(), 
-            Some(payload.panic_message.clone()), 
-            Some("AI parsing failed. Dispatch immediately.".to_string())
-        )
-    };
-
+    // Create the incident immediately with a placeholder for AI advice
     let incident = sqlx::query_as::<_, Incident>(
         "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *"
     )
@@ -70,12 +60,12 @@ pub async fn create_incident(
     .bind(claims.sub)
     .bind(&payload.location)
     .bind("reported")
-    .bind(&severity)
-    .bind(&emergency_type)
-    .bind(&details)
+    .bind("high") // Default to high
+    .bind("Analyzing...")
+    .bind(&payload.panic_message)
     .bind(payload.latitude)
     .bind(payload.longitude)
-    .bind(ai_advice)
+    .bind("📡 SYNCING_WITH_CRISIS_AI...")
     .fetch_one(&state.db)
     .await
     .map_err(|e| {
@@ -83,11 +73,43 @@ pub async fn create_incident(
         AppError::InternalServerError("Failed to create incident".to_string())
     })?;
 
+    // Broadcast the initial incident creation
     let msg = serde_json::json!({
         "type": "NEW_INCIDENT",
-        "data": incident
+        "data": incident.clone()
     }).to_string();
     let _ = state.tx.send(msg);
+
+    // Spawn a background task for real-time AI parsing
+    let panic_msg = payload.panic_message.clone();
+    let state_clone = state.clone();
+    let incident_id = incident.id;
+
+    tokio::spawn(async move {
+        if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg).await {
+            // Update the incident with AI results
+            let update_res = sqlx::query_as::<_, Incident>(
+                "UPDATE incidents SET emergency_type = ?, severity = ?, details = ?, ai_advice = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+            )
+            .bind(parsed.emergency_type)
+            .bind(parsed.severity)
+            .bind(parsed.details)
+            .bind(parsed.ai_advice)
+            .bind(incident_id)
+            .fetch_one(&state_clone.db)
+            .await;
+
+            if let Ok(updated_incident) = update_res {
+                // Broadcast the update via WebSocket
+                let update_msg = serde_json::json!({
+                    "type": "UPDATE_INCIDENT",
+                    "data": updated_incident
+                }).to_string();
+                let _ = state_clone.tx.send(update_msg);
+                println!("✅ Real-time AI advice synced for incident {}", incident_id);
+            }
+        }
+    });
 
     Ok(Json(incident))
 }
@@ -98,13 +120,24 @@ pub async fn update_status(
     _claims: Claims,
     Json(payload): Json<UpdateStatusRequest>,
 ) -> Result<Json<Incident>, AppError> {
-    let incident = sqlx::query_as::<_, Incident>(
-        "UPDATE incidents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
-    )
-    .bind(&payload.status)
-    .bind(id)
-    .fetch_optional(&state.db)
-    .await
+    let incident = if let Some(e_type) = payload.emergency_type {
+        sqlx::query_as::<_, Incident>(
+            "UPDATE incidents SET status = ?, emergency_type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+        )
+        .bind(&payload.status)
+        .bind(&e_type)
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+    } else {
+        sqlx::query_as::<_, Incident>(
+            "UPDATE incidents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+        )
+        .bind(&payload.status)
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+    }
     .map_err(|_| AppError::InternalServerError("Failed to update incident".to_string()))?
     .ok_or(AppError::NotFound("Incident not found".to_string()))?;
 

@@ -154,9 +154,9 @@ export const Login = () => {
                         onChange={(e) => setRole(e.target.value)}
                         className="input-terminal w-full font-mono text-xs uppercase tracking-widest"
                       >
-                        <option value="guest">GUEST_USER</option>
-                        <option value="staff">STAFF_MEMBER</option>
-                        <option value="responder">RESPONDER</option>
+                        <option value="guest" className="bg-void text-stardust">GUEST_USER</option>
+                        <option value="staff" className="bg-void text-stardust">STAFF_MEMBER</option>
+                        <option value="responder" className="bg-void text-stardust">RESPONDER</option>
                       </select>
                     </div>
                   </>
@@ -183,14 +183,14 @@ export const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3.5 text-stardust/40 hover:text-alert-orange transition-colors"
+                    className="absolute right-4 top-3.5 text-stardust/40 hover:text-accent-primary transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {step === 'login' && (
                   <div className="text-right">
-                    <Link to="/forgot-password" hidden className="text-[10px] font-mono text-stardust hover:text-alert-orange uppercase tracking-widest transition-colors">
+                    <Link to="/forgot-password" className="text-[10px] font-mono text-stardust hover:text-accent-primary uppercase tracking-widest transition-colors">
                       FORGOT_PASSWORD?
                     </Link>
                   </div>
@@ -216,7 +216,7 @@ export const Login = () => {
                 setStep(step === 'login' ? 'register' : 'login');
                 setError('');
               }}
-              className="font-mono text-[10px] text-stardust hover:text-alert-orange uppercase tracking-[0.2em] transition-colors"
+              className="font-mono text-[10px] text-stardust hover:text-accent-primary uppercase tracking-[0.2em] transition-colors"
             >
               {step === 'register' ? 'ALREADY_REGISTERED?_LOGIN' : "NEW_USER?_SIGN_UP"}
             </button>

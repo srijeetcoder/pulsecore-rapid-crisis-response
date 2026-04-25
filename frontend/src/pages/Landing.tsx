@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store/store';
-import { ShieldAlert, Activity, MapPin, Brain, ShieldCheck, Loader2, Home, ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, MapPin as MapPinIcon, Globe, MessageCircle, Share2 } from 'lucide-react';
+import { ShieldAlert, Activity, MapPin, Brain, ShieldCheck, Loader2, Home, ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, MapPin as MapPinIcon, Globe, MessageCircle, Share2, Navigation } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export const Landing = () => {
@@ -8,7 +8,9 @@ export const Landing = () => {
   const token = useStore((state) => state.token);
   const guestLogin = useStore((state) => state.guestLogin);
   const logout = useStore((state) => state.logout);
+  const triggerSOS = useStore((state) => state.triggerSOS);
   const isGuestLoading = useStore((state) => state.isGuestLoading);
+  const [isLocating, setIsLocating] = useState(false);
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -41,12 +43,12 @@ export const Landing = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   const handleEmergency = async () => {
-    if (token) {
-      navigate('/dashboard?sos=1');
-    } else {
+    setIsLocating(true);
+    if (!token) {
       await guestLogin();
-      navigate('/dashboard?sos=1');
     }
+    setIsLocating(false);
+    navigate('/dashboard?sos=1');
   };
 
   return (
@@ -137,25 +139,25 @@ export const Landing = () => {
               <button 
                 onClick={handleEmergency}
                 disabled={isGuestLoading}
-                className="btn-primary !px-12 !py-5 text-lg"
+                className="btn-danger !px-12 !py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center disabled:opacity-50 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
               >
                 {isGuestLoading ? (
                   <>
-                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                    <Navigation className="mr-3 h-6 w-6 animate-spin" />
                     Connecting...
                   </>
                 ) : (
                   <>
                     <Activity className="mr-3 h-6 w-6 animate-pulse" />
-                    SEND ALERT
+                    Report Emergency
                   </>
                 )}
               </button>
               <Link 
                 to={token ? "/dashboard" : "/login"}
-                className="btn-outline !px-12 !py-5 text-lg"
+                className="btn-outline !px-12 !py-5 text-lg transform transition-all duration-300 hover:scale-[1.02] hover:bg-white/5 active:scale-95 flex items-center justify-center"
               >
-                Enter Terminal
+                Enter Dashboard
                 <ArrowRight className="ml-3 w-5 h-5" />
               </Link>
             </div>
@@ -168,12 +170,12 @@ export const Landing = () => {
             </div>
 
             {/* Carousel Visuals */}
-            <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700">
+            <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
               <div 
-                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out transform scale-105 group-hover:scale-110"
+                className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-1000 ease-in-out transform scale-90 group-hover:scale-95 m-8"
                 style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
               ></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent pointer-events-none"></div>
               
               <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
                 <div className="space-y-1">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/store';
-import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -134,7 +134,7 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Map View */}
-            <div className="card-terminal !p-1 h-[450px] overflow-hidden relative z-0 shadow-2xl">
+            <div className="card-terminal !p-1 h-[350px] overflow-hidden relative z-0 shadow-2xl">
               <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%', borderRadius: '0.9rem' }}>
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -226,7 +226,7 @@ export const Dashboard = () => {
                       <div className="flex flex-col space-y-2 ml-4 shrink-0">
                          <select
                            value={incident.status}
-                           onChange={(e) => updateStatus(incident.id, e.target.value)}
+                           onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}
                            disabled={!isAuthority}
                            className="input-terminal !h-10 !text-xs font-mono uppercase tracking-widest disabled:opacity-40"
                          >
@@ -367,9 +367,10 @@ export const Dashboard = () => {
 
                <button
                 type="submit"
-                className="btn-primary w-full !py-5"
+                className="btn-primary w-full !py-5 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-primary/20 active:scale-95 flex items-center justify-center"
               >
-                SEND_ALERT
+                <Activity className="w-5 h-5 mr-2 animate-pulse" />
+                Report Emergency
               </button>
             </form>
           </div>
@@ -390,6 +391,12 @@ export const Dashboard = () => {
                 <>
                   <br /><br />
                   If you found our rapid crisis response service helpful, please consider registering for a full account to get access to advanced features, family tracking, and faster response times!
+                </>
+              )}
+              {!isGuest && (
+                <>
+                  <br /><br />
+                  Case resolved. Thanks and stay safe!
                 </>
               )}
             </p>

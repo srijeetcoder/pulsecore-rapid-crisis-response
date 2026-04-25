@@ -74,7 +74,7 @@ export const AiChatWidget: React.FC = () => {
     setIsTyping(true);
 
     const context = buildContext();
-    
+
     // Map existing messages to API format
     // Ignore the welcome message if you want, or map it. We'll map it so Gemini has context.
     const apiMessages = newMessages.map(m => ({
@@ -108,11 +108,10 @@ export const AiChatWidget: React.FC = () => {
     <>
       {/* Floating Chat Window */}
       <div
-        className={`fixed bottom-24 right-4 z-50 w-[350px] flex flex-col transition-all duration-300 ease-in-out ${
-          isOpen
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
+        className={`fixed bottom-24 right-4 z-50 w-[350px] flex flex-col transition-all duration-300 ease-in-out ${isOpen
+          ? 'opacity-100 translate-y-0 pointer-events-auto'
+          : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
         style={{ maxHeight: 'calc(100vh - 140px)' }}
       >
         <div className="card-terminal !p-0 shadow-black/50 flex flex-col overflow-hidden"
@@ -127,8 +126,8 @@ export const AiChatWidget: React.FC = () => {
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent-primary rounded-full border-2 border-void animate-ping" />
               </div>
               <div>
-                 <p className="text-sm font-heading font-bold text-white uppercase tracking-tight">CRISIS_AI_v4</p>
-                 <p className="font-mono text-[9px] text-accent-primary/70 uppercase tracking-widest">System Status: Online</p>
+                <p className="text-sm font-heading font-bold text-white uppercase tracking-tight">CRISIS AI</p>
+                <p className="font-mono text-[9px] text-accent-primary/70 uppercase tracking-widest">Powered By Gemini</p>
               </div>
             </div>
             <button
@@ -147,16 +146,15 @@ export const AiChatWidget: React.FC = () => {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'ai' && (
-                   <div className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center mr-3 mt-1 shrink-0">
-                     <Bot className="w-3.5 h-3.5 text-accent-primary" />
-                   </div>
+                  <div className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center mr-3 mt-1 shrink-0">
+                    <Bot className="w-3.5 h-3.5 text-accent-primary" />
+                  </div>
                 )}
                 <div
-                   className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                     msg.role === 'user'
-                       ? 'bg-accent-primary text-white rounded-br-sm shadow-lg shadow-accent-primary/10'
-                       : 'bg-void border border-white/5 text-stardust rounded-bl-sm'
-                   }`}
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
+                    ? 'bg-accent-primary text-white rounded-br-sm shadow-lg shadow-accent-primary/10'
+                    : 'bg-void border border-white/5 text-stardust rounded-bl-sm'
+                    }`}
                 >
                   <span
                     className="font-body"
@@ -175,7 +173,7 @@ export const AiChatWidget: React.FC = () => {
                 <div className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center mr-3 mt-1 shrink-0">
                   <Bot className="w-3.5 h-3.5 text-accent-primary" />
                 </div>
-                 <div className="bg-void border border-white/5 rounded-2xl rounded-bl-sm px-4 py-3">
+                <div className="bg-void border border-white/5 rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-accent-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 bg-accent-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -188,8 +186,8 @@ export const AiChatWidget: React.FC = () => {
           </div>
 
           {/* Input */}
-           <div className="px-4 py-4 border-t border-white/5 bg-surface shrink-0">
-             <div className="flex items-center gap-3 bg-void border border-white/5 rounded-xl px-4 py-2.5 focus-within:border-accent-primary transition-all duration-300">
+          <div className="px-4 py-4 border-t border-white/5 bg-surface shrink-0">
+            <div className="flex items-center gap-3 bg-void border border-white/5 rounded-xl px-4 py-2.5 focus-within:border-accent-primary transition-all duration-300">
               <input
                 ref={inputRef}
                 type="text"
@@ -201,10 +199,10 @@ export const AiChatWidget: React.FC = () => {
                 className="flex-1 bg-transparent text-sm text-white placeholder-stardust/30 font-body focus:outline-none disabled:opacity-50"
               />
               <button
-                 onClick={sendMessage}
-                 disabled={!input.trim() || isTyping}
-                 className="p-1.5 rounded-lg bg-gradient-to-br from-accent-primary to-accent-primary/80 text-white shadow-lg shadow-accent-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-               >
+                onClick={sendMessage}
+                disabled={!input.trim() || isTyping}
+                className="p-1.5 rounded-lg bg-gradient-to-br from-accent-primary to-accent-primary/80 text-white shadow-lg shadow-accent-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+              >
                 {isTyping ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
@@ -213,7 +211,7 @@ export const AiChatWidget: React.FC = () => {
               </button>
             </div>
             <p className="text-center font-mono text-[9px] text-stardust/40 mt-3 uppercase tracking-widest">
-              Emergency Protocol v4.0.1
+              Emergency Protocol
             </p>
           </div>
         </div>
@@ -221,11 +219,10 @@ export const AiChatWidget: React.FC = () => {
 
       <button
         onClick={() => setIsOpen(prev => !prev)}
-         className={`fixed bottom-4 right-4 z-50 w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 ${
-           isOpen
-             ? 'bg-surface border border-white/10'
-             : 'bg-gradient-to-br from-accent-primary to-accent-primary/80 shadow-accent-primary/40'
-         }`}
+        className={`fixed bottom-4 right-4 z-50 w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 ${isOpen
+          ? 'bg-surface border border-white/10'
+          : 'bg-gradient-to-br from-accent-primary to-accent-primary/80 shadow-accent-primary/40'
+          }`}
         title="Crisis Intelligence"
       >
         {isOpen ? (

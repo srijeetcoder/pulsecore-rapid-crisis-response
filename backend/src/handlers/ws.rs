@@ -14,6 +14,7 @@ pub async fn ws_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> 
 }
 
 async fn handle_socket(socket: WebSocket, state: AppState) {
+    println!("🔌 New WebSocket connection established");
     let (mut sender, mut receiver) = socket.split();
 
     let mut rx = state.tx.subscribe();

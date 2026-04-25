@@ -34,7 +34,7 @@ interface AppState {
   removeIncidentLocally: (id: string) => void;
   fetchIncidents: () => Promise<void>;
   triggerSOS: (location: string, panicMessage: string, lat: number | null, lng: number | null) => Promise<void>;
-  updateStatus: (id: string, status: string) => Promise<void>;
+  updateStatus: (id: string, status: string, emergency_type?: string) => Promise<void>;
   removeIncident: (id: string) => Promise<void>;
   guestLogin: () => Promise<void>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -117,7 +117,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
-  updateStatus: async (id, status) => {
+  updateStatus: async (id, status, emergency_type) => {
     const { token } = get();
     if (!token) return;
     try {
@@ -127,7 +127,7 @@ export const useStore = create<AppState>((set, get) => ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, emergency_type })
       });
     } catch (e) {
       console.error(e);
