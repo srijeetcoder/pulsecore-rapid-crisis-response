@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* Typography Imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@theme {
+  --color-accent-primary: #8B5CF6;
+  --color-accent-secondary: #EF4444;
+  --color-void: #0A0A0F;
+  --color-surface: #12121A;
+  --color-stardust: #FAFAFA;
+  --color-muted: #1A1A24;
+  --color-muted-foreground: #71717A;
+  --color-boundary: rgba(255, 255, 255, 0.08);
+
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  --background: #0A0A0F;
+  --foreground: #FAFAFA;
+  --muted: #1A1A24;
+  
+  /* Glow System */
+  --glow-primary: 0 0 20px rgba(139, 92, 246, 0.2);
+  --glow-primary-intense: 0 0 40px rgba(139, 92, 246, 0.25);
+  --glow-secondary: 0 0 20px rgba(239, 68, 68, 0.2);
+  --glow-secondary-intense: 0 0 40px rgba(239, 68, 68, 0.25);
+  --glow-blend: 0 0 30px rgba(139, 92, 246, 0.2), 0 0 50px rgba(239, 68, 68, 0.15);
+}
+
+body {
+  @apply bg-void text-stardust min-h-screen font-body antialiased;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(239, 68, 68, 0.03) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Base Grid Texture */
+.bg-grid-pattern {
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+/* Typography Utilities */
+@utility font-heading { font-family: var(--font-heading); }
+@utility font-body { font-family: var(--font-body); }
+@utility font-mono { font-family: var(--font-mono); }
+
+/* Buttons */
+@utility btn-primary {
+  @apply relative flex items-center justify-center px-8 py-3 rounded-xl font-body font-bold uppercase tracking-wider text-xs transition-all duration-300 scale-100;
+  background: linear-gradient(135deg, #8B5CF6, #EF4444);
+  color: white;
+  box-shadow: var(--glow-blend);
+
+  &:hover {
+    @apply scale-[1.02] -translate-y-0.5;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(239, 68, 68, 0.2);
+  }
+
+  &:active {
+    @apply scale-[0.98] translate-y-0;
+  }
+}
+
+@utility btn-outline {
+  @apply flex items-center justify-center px-8 py-3 rounded-xl font-body font-bold uppercase tracking-wider text-xs transition-all duration-300 border border-white/10 text-white;
+  
+  &:hover {
+    @apply border-accent-primary bg-accent-primary/5;
+    box-shadow: var(--glow-primary);
+  }
+}
+
+@utility btn-ghost {
+  @apply flex items-center justify-center px-6 py-2 rounded-xl font-body font-medium text-muted-foreground transition-all duration-300;
+  
+  &:hover {
+    @apply bg-white/5 text-stardust;
+  }
+}
+
+@utility btn-danger {
+  @apply flex items-center justify-center px-8 py-3 rounded-xl font-body font-bold uppercase tracking-wider text-xs transition-all duration-300 bg-accent-secondary text-white;
+  
+  &:hover {
+    @apply scale-[1.02];
+    box-shadow: var(--glow-secondary);
+  }
+}
+
+/* Cards */
+@utility card-terminal {
+  @apply bg-surface/60 backdrop-blur-md border border-white/5 rounded-2xl p-8 transition-all duration-300;
+  
+  &:hover {
+    @apply border-white/10 bg-surface/80;
+  }
+}
+
+@utility card-highlight {
+  @apply bg-surface/80 backdrop-blur-md border border-accent-primary/20 rounded-2xl p-8 transition-all duration-300;
+  box-shadow: var(--glow-primary);
+}
+
+@utility card-alert {
+  @apply bg-surface/80 backdrop-blur-md border border-accent-secondary/20 rounded-2xl p-8 transition-all duration-300;
+  box-shadow: var(--glow-secondary);
+}
+
+@utility card-glass {
+  @apply bg-white/2 backdrop-blur-lg border border-white/5 rounded-2xl p-8;
+}
+
+/* Inputs */
+@utility input-terminal {
+  @apply h-12 bg-white/2 border border-white/5 rounded-xl px-4 py-2 text-stardust text-sm transition-all duration-300 outline-none;
+  
+  &:focus {
+    @apply border-accent-primary/40 bg-white/5;
+    box-shadow: var(--glow-primary);
+  }
+
+  &::placeholder {
+    @apply text-muted-foreground/40;
+  }
+}
+
+/* Animated Utilities */
+@utility animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@utility neon-text-purple {
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+@utility neon-text-red {
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Custom Orbital Animation */
+.orbital-ring {
+  @apply absolute rounded-full border border-white/5;
+}
+
+.orbital-ring-1 { @apply w-[400px] h-[400px] animate-[spin_10s_linear_infinite]; }
+.orbital-ring-2 { @apply w-[600px] h-[600px] animate-[spin_15s_linear_infinite_reverse]; }

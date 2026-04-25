@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+
+# Rust
+target/
+**/*.rs.bk
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
