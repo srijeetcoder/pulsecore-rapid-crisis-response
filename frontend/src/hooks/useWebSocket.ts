@@ -23,9 +23,18 @@ export const useWebSocket = () => {
           const data = JSON.parse(event.data);
           if (data.type === 'NEW_INCIDENT' || data.type === 'UPDATE_INCIDENT') {
             const state = useStore.getState();
+            const user = state.user;
             
-            // If it's an update marking it as resolved, and user is NOT staff/responder, show the popup
-            const isAuthority = state.user?.role === 'responder' || state.user?.role === 'staff';
+            // SECURITY FILTER: Only authorities see all emergencies. 
+            // Guests and standard users only see their own reported SOS cases.
+            const isAuthority = user?.role === 'responder' || user?.role === 'staff';
+            const isOwnIncident = data.data.reporter_id === user?.id;
+
+            if (!isAuthority && !isOwnIncident) {
+              return; // Ignore incidents not belonging to the current guest/user
+            }
+
+            // If it's an update marking it as resolved, show the popup
             if (data.type === 'UPDATE_INCIDENT' && data.data.status === 'resolved' && !isAuthority) {
               const existing = state.incidents.find(i => i.id === data.data.id);
               if (existing && existing.status !== 'resolved') {

@@ -14,6 +14,7 @@ interface NewsItem {
 export const Landing = () => {
   const navigate = useNavigate();
   const token = useStore((state) => state.token);
+  const user = useStore((state) => state.user);
   const guestLogin = useStore((state) => state.guestLogin);
   const logout = useStore((state) => state.logout);
   const isGuestLoading = useStore((state) => state.isGuestLoading);
@@ -104,12 +105,18 @@ export const Landing = () => {
             <div className="flex space-x-6 items-center">
               {token ? (
                 <>
-                  <button
-                    onClick={() => logout()}
-                    className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
-                  >
-                    Disconnect
-                  </button>
+                  {user?.role === 'guest' ? (
+                    <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
+                      Get Access
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => logout()}
+                      className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
+                    >
+                      Disconnect
+                    </button>
+                  )}
                   <Link to="/dashboard" className="btn-primary !py-2.5 !px-6 !text-xs">
                     Dashboard
                   </Link>

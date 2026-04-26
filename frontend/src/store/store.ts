@@ -9,6 +9,7 @@ interface User {
 
 export interface Incident {
   id: string;
+  reporter_id: string;
   location: string;
   status: string;
   severity: string;

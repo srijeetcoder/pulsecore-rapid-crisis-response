@@ -119,6 +119,14 @@ export const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center space-x-6">
+            {isGuest && (
+              <Link 
+                to="/login" 
+                className="btn-outline !px-6 !py-3 !text-[10px] font-mono uppercase tracking-[0.2em] border-accent-primary/30 text-accent-primary hover:bg-accent-primary/10"
+              >
+                Get Access
+              </Link>
+            )}
             {!isGuest && (
               <Link to="/settings" className="btn-outline !p-3 !bg-surface/50 group" title="Account Settings">
                 <SettingsIcon className="w-6 h-6 text-stardust group-hover:text-accent-primary transition-colors" />
@@ -171,7 +179,9 @@ export const Dashboard = () => {
                 )}
               </div>
               <div className="space-y-4">
-                {incidents.map((incident) => (
+                {incidents
+                  .filter(inc => isAuthority || inc.reporter_id === user?.id)
+                  .map((incident) => (
                   <div
                     key={incident.id}
                     className={`p-6 bg-void rounded-2xl border transition-all group relative overflow-hidden ${incident.status === 'resolved'
