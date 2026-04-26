@@ -9,6 +9,7 @@ import { Contact } from './pages/Contact';
 import { Settings } from './pages/Settings';
 import { useWebSocket } from './hooks/useWebSocket';
 import { AiChatWidget } from './components/AiChatWidget';
+import { TiltedGridBackground } from './components/TiltedGridBackground';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = useStore((state) => state.token);
@@ -25,6 +26,14 @@ function App() {
 
   return (
     <Router>
+      <TiltedGridBackground />
+      {/* Global Ambient Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+        <div className="ambient-blob ambient-blob-primary"></div>
+        <div className="ambient-blob ambient-blob-secondary"></div>
+        <div className="ambient-blob ambient-blob-tertiary"></div>
+      </div>
+      
       {token && <GlobalWebSocket />}
       <Routes>
         <Route path="/" element={<Landing />} />

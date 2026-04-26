@@ -92,7 +92,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-void px-4 relative overflow-hidden font-body">
+    <div className="min-h-screen flex items-center justify-center bg-transparent px-4 relative overflow-hidden font-body">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       

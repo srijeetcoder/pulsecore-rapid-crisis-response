@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store/store';
-import { ShieldAlert, Activity, MapPin, Brain, ShieldCheck, Loader2, Home, ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, MapPin as MapPinIcon, Globe, MessageCircle, Share2, Navigation } from 'lucide-react';
+import { ShieldAlert, Activity, MapPin, Brain, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, MapPin as MapPinIcon, Globe, MessageCircle, Share2, Navigation } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export const Landing = () => {
@@ -8,9 +8,7 @@ export const Landing = () => {
   const token = useStore((state) => state.token);
   const guestLogin = useStore((state) => state.guestLogin);
   const logout = useStore((state) => state.logout);
-  const triggerSOS = useStore((state) => state.triggerSOS);
   const isGuestLoading = useStore((state) => state.isGuestLoading);
-  const [isLocating, setIsLocating] = useState(false);
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -43,19 +41,17 @@ export const Landing = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   const handleEmergency = async () => {
-    setIsLocating(true);
     if (!token) {
       await guestLogin();
     }
-    setIsLocating(false);
     navigate('/dashboard?sos=1');
   };
 
   return (
-    <div className="min-h-screen bg-void text-white selection:bg-accent-primary/30 font-body relative overflow-hidden">
+    <div className="min-h-screen bg-transparent text-white selection:bg-accent-primary/30 font-body relative overflow-hidden">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-      
+
       {/* Ambient Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-accent-secondary/5 blur-[100px] rounded-full pointer-events-none"></div>
@@ -83,8 +79,8 @@ export const Landing = () => {
             <div className="flex space-x-6 items-center">
               {token ? (
                 <>
-                  <button 
-                    onClick={() => logout()} 
+                  <button
+                    onClick={() => logout()}
                     className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
                   >
                     Disconnect
@@ -123,9 +119,9 @@ export const Landing = () => {
               Emergency Response Core
             </div>
             <h1 className="text-5xl md:text-8xl font-heading font-bold tracking-tighter mb-10 leading-[1.1] max-w-5xl">
-              {slides[currentSlide].title.split(' ').map((word, i, arr) => 
+              {slides[currentSlide].title.split(' ').map((word, i, arr) =>
                 i >= arr.length - 2 ? (
-                  <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary neon-text-purple">
+                  <span key={i} className="text-gradient-accent">
                     {word}{' '}
                   </span>
                 ) : word + ' '
@@ -134,9 +130,9 @@ export const Landing = () => {
             <p className="mt-4 max-w-2xl text-xl text-stardust font-body leading-relaxed mb-12">
               {slides[currentSlide].desc}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-6 sm:space-y-0 sm:space-x-8">
-              <button 
+              <button
                 onClick={handleEmergency}
                 disabled={isGuestLoading}
                 className="btn-danger !px-12 !py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center disabled:opacity-50 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
@@ -153,7 +149,7 @@ export const Landing = () => {
                   </>
                 )}
               </button>
-              <Link 
+              <Link
                 to={token ? "/dashboard" : "/login"}
                 className="btn-outline !px-12 !py-5 text-lg transform transition-all duration-300 hover:scale-[1.02] hover:bg-white/5 active:scale-95 flex items-center justify-center"
               >
@@ -162,37 +158,37 @@ export const Landing = () => {
               </Link>
             </div>
 
-              {!token && (
-                <p className="mt-4 text-sm text-gray-500">
-                  Secure anonymous session created automatically for guests.
-                </p>
-              )}
-            </div>
+            {!token && (
+              <p className="mt-4 text-sm text-gray-500">
+                Secure anonymous session created automatically for guests.
+              </p>
+            )}
+          </div>
 
-            {/* Carousel Visuals */}
-            <div className="relative mt-16 max-w-4xl mx-auto h-[350px] md:h-[450px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
-              <div 
-                className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-1000 ease-in-out transform scale-90 group-hover:scale-95 m-8"
-                style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
-              ></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent pointer-events-none"></div>
-              
-              <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
-                <div className="space-y-1">
-                  <div className="flex space-x-2">
-                    {slides.map((_, i) => (
-                      <div key={i} className={i === currentSlide ? "h-1.5 rounded-full transition-all duration-500 w-8 bg-accent-primary" : "h-1.5 rounded-full transition-all duration-500 w-2 bg-white/30"}></div>
-                    ))}
-                  </div>
-                </div>
+          {/* Carousel Visuals */}
+          <div className="relative mt-16 max-w-4xl mx-auto h-[350px] md:h-[450px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
+            <div
+              className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-1000 ease-in-out transform scale-90 group-hover:scale-95 m-8"
+              style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
+            ></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent pointer-events-none"></div>
+
+            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
+              <div className="space-y-1">
                 <div className="flex space-x-2">
-                  <button onClick={prevSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronLeft className="w-5 h-5" /></button>
-                  <button onClick={nextSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronRight className="w-5 h-5" /></button>
+                  {slides.map((_, i) => (
+                    <div key={i} className={i === currentSlide ? "h-1.5 rounded-full transition-all duration-500 w-8 bg-accent-primary" : "h-1.5 rounded-full transition-all duration-500 w-2 bg-white/30"}></div>
+                  ))}
                 </div>
+              </div>
+              <div className="flex space-x-2">
+                <button onClick={prevSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={nextSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronRight className="w-5 h-5" /></button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
       <div className="bg-dark-matter/50 border-y border-white/5 py-20 backdrop-blur-sm relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -261,7 +257,7 @@ export const Landing = () => {
                 <span className="font-heading font-bold text-xl tracking-tight uppercase text-white">PulseCore</span>
               </div>
               <p className="text-stardust text-sm leading-relaxed mb-8">
-                A premier synchronized security layer for emergency synchronization and community resilience. 
+                A premier synchronized security layer for emergency synchronization and community resilience.
               </p>
               <div className="flex space-x-6">
                 <a href="#" className="text-stardust hover:text-accent-primary transition-colors"><Globe className="w-5 h-5" /></a>
@@ -269,7 +265,7 @@ export const Landing = () => {
                 <a href="#" className="text-stardust hover:text-accent-primary transition-colors"><Share2 className="w-5 h-5" /></a>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-mono text-white font-bold mb-8 uppercase tracking-[0.2em] text-[10px]">Registry</h4>
               <ul className="space-y-4 text-stardust text-sm">
@@ -285,20 +281,20 @@ export const Landing = () => {
               <ul className="space-y-6 text-stardust text-sm">
                 <li className="flex items-start">
                   <MapPinIcon className="w-5 h-5 mr-4 text-accent-primary shrink-0" />
-                  <span className="leading-relaxed">Garia, Kolkata, WB - 700084, Response Zone</span>
+                  <span className="leading-relaxed">Garia, Kolkata, WB - 700084, India</span>
                 </li>
                 <li className="flex items-center">
                   <Phone className="w-5 h-5 mr-4 text-accent-primary shrink-0" />
-                  <span className="font-mono">+91 SYNC-CORE</span>
+                  <span className="font-mono">+91 XXXXX XXXXX</span>
                 </li>
                 <li className="flex items-center">
                   <Mail className="w-5 h-5 mr-4 text-accent-primary shrink-0" />
-                  <span className="font-mono">ops@pulsecore.in</span>
+                  <span className="font-mono">support.pulsecore@gmail.com</span>
                 </li>
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
             <p className="font-mono text-stardust text-[10px] uppercase tracking-widest text-center">
               © {new Date().getFullYear()} PulseCore Response Network. System v4.0.0

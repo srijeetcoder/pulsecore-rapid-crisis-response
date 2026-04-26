@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store/store';
-import { Bot, X, Send, MessageSquare, Loader2, ChevronDown } from 'lucide-react';
+import { Bot, X, Send, Loader2, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChatMessage {

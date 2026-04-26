@@ -1,9 +1,9 @@
-import { Home, Shield, Users, Target, Zap, ShieldAlert } from 'lucide-react';
+import { ShieldAlert, Home, Shield, Users, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const About = () => {
   return (
-    <div className="min-h-screen bg-void text-white pt-24 font-body relative overflow-hidden">
+    <div className="min-h-screen bg-transparent text-white pt-24 font-body relative overflow-hidden">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       <nav className="border-b border-white/5 bg-void/60 backdrop-blur-md fixed top-0 w-full z-50">
@@ -27,7 +27,7 @@ export const About = () => {
 
       <div className="max-w-5xl mx-auto px-4 py-16">
         <div className="text-center mb-24">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-8 tracking-tighter">About <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary neon-text-purple">The System</span></h1>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-8 tracking-tighter">About <span className="text-gradient-accent">The System</span></h1>
           <p className="text-xl text-stardust max-w-3xl mx-auto leading-relaxed">
             We are engineering a high-precision security layer to bridge the gap between crisis reporting and synchronized response systems.
           </p>

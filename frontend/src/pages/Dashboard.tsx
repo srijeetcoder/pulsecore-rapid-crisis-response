@@ -93,30 +93,30 @@ export const Dashboard = () => {
   const isGuest = user?.role === 'guest';
 
   return (
-    <div className="min-h-screen bg-void text-white p-6 pt-24 font-body relative overflow-hidden">
+    <div className="min-h-screen bg-transparent text-white p-6 pt-24 font-body relative overflow-hidden">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="btn-ghost !px-4 !py-2 mr-4 !text-[10px] font-mono uppercase tracking-[0.2em]"
             >
               <Home className="w-4 h-4 mr-2" />
               HOME
             </Link>
             <div>
-              <h1 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary">{isAuthority ? 'Command Center' : 'Network Emergencies'}</h1>
+              <h1 className="text-3xl font-heading font-bold text-gradient-accent">{isAuthority ? 'Command Center' : 'Network Emergencies'}</h1>
               <p className="text-stardust font-mono text-xs uppercase tracking-widest mt-1">
                 Real-time Active Units
-              {user?.role === 'guest' && (
-                <span className="ml-3 px-2 py-0.5 text-[10px] bg-accent-secondary/10 text-accent-secondary border border-accent-secondary/30 rounded-full font-bold">
-                  GUEST_ACCESS
-                </span>
-              )}
-            </p>
-          </div>
+                {user?.role === 'guest' && (
+                  <span className="ml-3 px-2 py-0.5 text-[10px] bg-accent-secondary/10 text-accent-secondary border border-accent-secondary/30 rounded-full font-bold">
+                    GUEST_ACCESS
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
           <div className="flex items-center space-x-6">
             {!isGuest && (
@@ -149,8 +149,8 @@ export const Dashboard = () => {
                     <Marker key={inc.id} position={[inc.latitude, inc.longitude]}>
                       <Popup>
                         <div className="text-gray-900 font-sans">
-                          <strong>{inc.emergency_type}</strong><br/>
-                          {inc.status}<br/>
+                          <strong>{inc.emergency_type}</strong><br />
+                          {inc.status}<br />
                           {inc.location}
                         </div>
                       </Popup>
@@ -174,70 +174,68 @@ export const Dashboard = () => {
                 {incidents.map((incident) => (
                   <div
                     key={incident.id}
-                    className={`p-6 bg-void rounded-2xl border transition-all group relative overflow-hidden ${
-                      incident.status === 'resolved'
+                    className={`p-6 bg-void rounded-2xl border transition-all group relative overflow-hidden ${incident.status === 'resolved'
                         ? 'border-green-800/20 opacity-60 hover:opacity-100'
                         : 'border-white/5 hover:border-accent-primary/30 shadow-lg hover:shadow-accent-primary/5'
-                    }`}
+                      }`}
                   >
                     <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-accent-primary/20 uppercase tracking-widest">ID_{incident.id.slice(-6)}</div>
                     <div className="flex items-start justify-between">
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center flex-wrap gap-2">
-                           <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${
-                             incident.severity === 'critical' ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/50 neon-text-red' :
-                             incident.severity === 'high' ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/50 neon-text-purple' :
-                             'bg-stardust/20 text-stardust border border-stardust/50'
-                           }`}>
-                             {incident.severity}
-                           </span>
-                           <span className="text-stardust font-mono text-[10px] uppercase tracking-widest flex items-center">
-                             <Clock className="w-3 h-3 mr-1.5" />
-                             {format(new Date(incident.created_at), 'HH:mm:ss')}
-                           </span>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${incident.severity === 'critical' ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/50 neon-text-red' :
+                              incident.severity === 'high' ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/50 neon-text-purple' :
+                                'bg-stardust/20 text-stardust border border-stardust/50'
+                            }`}>
+                            {incident.severity}
+                          </span>
+                          <span className="text-stardust font-mono text-[10px] uppercase tracking-widest flex items-center">
+                            <Clock className="w-3 h-3 mr-1.5" />
+                            {format(new Date(incident.created_at), 'HH:mm:ss')}
+                          </span>
                           {incident.emergency_type && (
                             <span className="text-primary text-sm font-semibold flex items-center">
                               <AlertCircle className="w-4 h-4 mr-1" />
                               {incident.emergency_type}
                             </span>
                           )}
-                           {incident.status === 'resolved' && (
-                             <span className="px-3 py-1 text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 rounded-full font-mono font-bold uppercase tracking-widest">
-                               STATUS_RESOLVED
-                             </span>
-                           )}
+                          {incident.status === 'resolved' && (
+                            <span className="px-3 py-1 text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 rounded-full font-mono font-bold uppercase tracking-widest">
+                              STATUS_RESOLVED
+                            </span>
+                          )}
                         </div>
-                         <p className="text-xl font-heading font-bold text-white mt-4">{incident.location}</p>
-                         
-                         {incident.details && (
-                           <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5 shadow-inner">
-                             <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Details</span>
-                             <p className="text-sm text-stardust leading-relaxed">{incident.details}</p>
-                           </div>
-                         )}
+                        <p className="text-xl font-heading font-bold text-white mt-4">{incident.location}</p>
 
-                         {incident.ai_advice && (
-                           <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
-                             <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS_AI_v4</div>
-                             <p className="text-sm text-stardust flex items-start">
-                               <span className="mr-3 text-accent-primary">⚙️</span> {incident.ai_advice}
-                             </p>
-                           </div>
-                         )}
+                        {incident.details && (
+                          <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5 shadow-inner">
+                            <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Details</span>
+                            <p className="text-sm text-stardust leading-relaxed">{incident.details}</p>
+                          </div>
+                        )}
+
+                        {incident.ai_advice && (
+                          <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
+                            <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
+                            <p className="text-sm text-stardust flex items-start">
+                              <span className="mr-3 text-accent-primary">⚙️</span> {incident.ai_advice}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col space-y-2 ml-4 shrink-0">
-                         <select
-                           value={incident.status}
-                           onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}
-                           disabled={!isAuthority}
-                           className="input-terminal !h-10 !text-xs font-mono uppercase tracking-widest disabled:opacity-40"
-                         >
-                           <option value="reported">Reported</option>
-                           <option value="investigating">Auditing</option>
-                           <option value="resolving">Syncing</option>
-                           <option value="resolved">Proved</option>
-                         </select>
+                        <select
+                          value={incident.status}
+                          onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}
+                          disabled={!isAuthority}
+                          className="input-terminal !h-10 !text-xs font-mono uppercase tracking-widest disabled:opacity-40"
+                        >
+                          <option value="reported">Reported</option>
+                          <option value="investigating">Auditing</option>
+                          <option value="resolving">Syncing</option>
+                          <option value="resolved">Proved</option>
+                        </select>
 
                         {/* Remove button — only for resolved incidents, only for authorities */}
                         {isAuthority && incident.status === 'resolved' && (
@@ -368,7 +366,7 @@ export const Dashboard = () => {
                 </div>
               </div>
 
-               <button
+              <button
                 type="submit"
                 className="btn-primary w-full !py-5 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-primary/20 active:scale-95 flex items-center justify-center"
               >

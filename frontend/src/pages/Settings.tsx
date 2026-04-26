@@ -21,7 +21,7 @@ export const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-void text-white pt-24 px-4 font-body relative overflow-hidden">
+    <div className="min-h-screen bg-transparent text-white pt-24 px-4 font-body relative overflow-hidden">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
 
