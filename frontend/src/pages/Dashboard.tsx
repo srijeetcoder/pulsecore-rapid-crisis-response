@@ -92,7 +92,8 @@ export const Dashboard = () => {
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
 
-  if (!user) {
+  // Wait for the full profile sync (ensures we have user.id, etc.)
+  if (!user || !user.id) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="animate-pulse flex flex-col items-center">

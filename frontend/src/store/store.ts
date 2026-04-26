@@ -45,7 +45,18 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  user: null,
+  user: (() => {
+    const token = localStorage.getItem('token');
+    if (token && token !== 'null') {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return { role: payload.role } as User;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  })(),
   token: localStorage.getItem('token') === 'null' ? null : localStorage.getItem('token'),
   incidents: [],
   isGuestLoading: false,
@@ -232,10 +243,15 @@ export const useStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         const user = await res.json();
-        set({ user });
+        // Only update if the token hasn't changed since the request started
+        if (get().token === token) {
+          set({ user });
+        }
       } else {
-        // If token is invalid, clear it
-        get().logout();
+        // If token is invalid, clear it, but only if it's still the same token
+        if (get().token === token) {
+          get().logout();
+        }
       }
     } catch (e) {
       console.error(e);
