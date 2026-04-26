@@ -1,13 +1,8 @@
-pub mod auth;
-pub mod incidents;
-pub mod ws;
-pub mod ai;
-
-
 use axum::{
     routing::{get, post, put, delete},
     Router,
 };
+
 use crate::AppState;
 use crate::handlers::{auth, incidents, ws, ai};
 
