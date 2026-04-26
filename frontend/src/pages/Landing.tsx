@@ -67,7 +67,8 @@ export const Landing = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + newsItems.length) % newsItems.length);
 
   const handleEmergency = async () => {
-    if (!token) {
+    // If no token or no user profile, perform a guest login first
+    if (!token || !user) {
       await guestLogin();
     }
     navigate('/dashboard?sos=1');

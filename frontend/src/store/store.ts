@@ -46,7 +46,7 @@ interface AppState {
 
 export const useStore = create<AppState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('token'),
+  token: localStorage.getItem('token') === 'null' ? null : localStorage.getItem('token'),
   incidents: [],
   isGuestLoading: false,
   isRegistrationPopupOpen: false,
