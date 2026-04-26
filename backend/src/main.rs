@@ -23,14 +23,7 @@ pub struct AppState {
 #[tokio::main]
 async fn main() {
     // Load .env explicitly from the backend directory (handles running from any CWD)
-    let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(".env");
-    match dotenvy::from_path(&env_path) {
-        Ok(_) => println!("✅ Loaded .env from: {}", env_path.display()),
-        Err(e) => {
-            eprintln!("⚠️  Could not load .env from {}: {}", env_path.display(), e);
-            dotenv().ok();
-        }
-    }
+    dotenv().ok();
 
     // Print SMTP config status on startup
     let smtp_user = env::var("SMTP_USERNAME").unwrap_or_else(|_| "(not set)".to_string());

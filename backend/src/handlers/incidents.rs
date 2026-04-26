@@ -32,7 +32,7 @@ pub async fn list_incidents(
     claims: Claims,
 ) -> Result<Json<Vec<Incident>>, AppError> {
     let incidents = if claims.role == "guest" || claims.role == "user" {
-        sqlx::query_as::<_, Incident>("SELECT * FROM incidents WHERE reporter_id = ? ORDER BY created_at DESC")
+        sqlx::query_as::<_, Incident>("SELECT * FROM incidents WHERE reporter_id = $1 ORDER BY created_at DESC")
             .bind(claims.sub)
             .fetch_all(&state.db)
             .await
@@ -40,7 +40,10 @@ pub async fn list_incidents(
         sqlx::query_as::<_, Incident>("SELECT * FROM incidents ORDER BY created_at DESC")
             .fetch_all(&state.db)
             .await
-    }.map_err(|_| AppError::InternalServerError("Failed to fetch incidents".to_string()))?;
+    }.map_err(|e| {
+        println!("Fetch error: {}", e);
+        AppError::InternalServerError("Failed to fetch incidents".to_string())
+    })?;
 
     Ok(Json(incidents))
 }
@@ -54,7 +57,7 @@ pub async fn create_incident(
 
     // Create the incident immediately with a placeholder for AI advice
     let incident = sqlx::query_as::<_, Incident>(
-        "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *"
+        "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *"
     )
     .bind(id)
     .bind(claims.sub)
@@ -89,7 +92,7 @@ pub async fn create_incident(
         if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg).await {
             // Update the incident with AI results
             let update_res = sqlx::query_as::<_, Incident>(
-                "UPDATE incidents SET emergency_type = ?, severity = ?, details = ?, ai_advice = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+                "UPDATE incidents SET emergency_type = $1, severity = $2, details = $3, ai_advice = $4, updated_at = NOW() WHERE id = $5 RETURNING *"
             )
             .bind(parsed.emergency_type)
             .bind(parsed.severity)
@@ -122,7 +125,7 @@ pub async fn update_status(
 ) -> Result<Json<Incident>, AppError> {
     let incident = if let Some(e_type) = payload.emergency_type {
         sqlx::query_as::<_, Incident>(
-            "UPDATE incidents SET status = ?, emergency_type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+            "UPDATE incidents SET status = $1, emergency_type = $2, updated_at = NOW() WHERE id = $3 RETURNING *"
         )
         .bind(&payload.status)
         .bind(&e_type)
@@ -131,14 +134,17 @@ pub async fn update_status(
         .await
     } else {
         sqlx::query_as::<_, Incident>(
-            "UPDATE incidents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *"
+            "UPDATE incidents SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *"
         )
         .bind(&payload.status)
         .bind(id)
         .fetch_optional(&state.db)
         .await
     }
-    .map_err(|_| AppError::InternalServerError("Failed to update incident".to_string()))?
+    .map_err(|e| {
+        println!("Update error: {}", e);
+        AppError::InternalServerError("Failed to update incident".to_string())
+    })?
     .ok_or(AppError::NotFound("Incident not found".to_string()))?;
 
     let msg = serde_json::json!({
@@ -164,11 +170,14 @@ pub async fn delete_incident(
     #[derive(sqlx::FromRow)]
     struct StatusCheck { status: String }
 
-    let check = sqlx::query_as::<_, StatusCheck>("SELECT status FROM incidents WHERE id = ?")
+    let check = sqlx::query_as::<_, StatusCheck>("SELECT status FROM incidents WHERE id = $1")
         .bind(id)
         .fetch_optional(&state.db)
         .await
-        .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
+        .map_err(|e| {
+            println!("Check error: {}", e);
+            AppError::InternalServerError("Database error".to_string())
+        })?
         .ok_or(AppError::NotFound("Incident not found".to_string()))?;
 
     if check.status != "resolved" {
@@ -176,7 +185,7 @@ pub async fn delete_incident(
     }
 
     // Delete related records first to satisfy foreign key constraints
-    sqlx::query("DELETE FROM messages WHERE incident_id = ?")
+    sqlx::query("DELETE FROM messages WHERE incident_id = $1")
         .bind(id)
         .execute(&state.db)
         .await
@@ -185,13 +194,13 @@ pub async fn delete_incident(
             AppError::InternalServerError("Failed to delete messages".to_string())
         })?;
 
-    sqlx::query("DELETE FROM incident_reports WHERE incident_id = ?")
+    sqlx::query("DELETE FROM incident_reports WHERE incident_id = $1")
         .bind(id)
         .execute(&state.db)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete incident reports".to_string()))?;
 
-    sqlx::query("DELETE FROM incidents WHERE id = ?")
+    sqlx::query("DELETE FROM incidents WHERE id = $1")
         .bind(id)
         .execute(&state.db)
         .await

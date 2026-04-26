@@ -63,7 +63,7 @@ pub async fn register(
 
     // Insert unverified user
     let _user = sqlx::query_as::<_, User>(
-        "INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?, 0) RETURNING *"
+        "INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES ($1, $2, $3, $4, $5, FALSE) RETURNING *"
     )
     .bind(id)
     .bind(&payload.name)
@@ -73,28 +73,20 @@ pub async fn register(
     .fetch_one(&state.db)
     .await
     .map_err(|e| {
-        if e.to_string().contains("UNIQUE constraint") {
+        if e.to_string().contains("unique constraint") || e.to_string().contains("duplicate key") {
             AppError::BadRequest("Email already exists".to_string())
         } else {
             AppError::InternalServerError("Failed to create user".to_string())
         }
     })?;
 
-    // Generate 6-digit OTP and store with SQLite-compatible expires_at
-    let otp: String = (0..6).map(|_| rand::thread_rng().gen_range(0..10).to_string()).collect();
-    let otp_id = Uuid::new_v4();
-    // Use SQLite datetime format so datetime('now') comparison works
-    let expires_at = (Utc::now() + Duration::minutes(15))
-        .format("%Y-%m-%d %H:%M:%S")
-        .to_string();
-
     sqlx::query(
-        "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES (?, ?, ?, ?, 0)"
+        "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES ($1, $2, $3, $4, FALSE)"
     )
-    .bind(otp_id.to_string())
+    .bind(otp_id)
     .bind(&payload.email)
     .bind(&otp)
-    .bind(&expires_at)
+    .bind(Utc::now() + Duration::minutes(15))
     .execute(&state.db)
     .await
     .map_err(|_| AppError::InternalServerError("Failed to generate OTP".to_string()))?;
@@ -177,7 +169,7 @@ pub async fn verify_otp(
     println!("🔍 Verifying OTP for email='{}' otp='{}'", payload.email, payload.otp);
 
     let record = sqlx::query_as::<_, OtpRecord>(
-        "SELECT id FROM otp_tokens WHERE email = ? AND otp = ? AND used = 0 AND expires_at > datetime('now')"
+        "SELECT id FROM otp_tokens WHERE email = $1 AND otp = $2 AND used = FALSE AND expires_at > NOW()"
     )
     .bind(&payload.email)
     .bind(&payload.otp)
@@ -193,7 +185,7 @@ pub async fn verify_otp(
     })?;
 
     // Mark as used
-    sqlx::query("UPDATE otp_tokens SET used = 1 WHERE id = ?")
+    sqlx::query("UPDATE otp_tokens SET used = TRUE WHERE id = $1")
         .bind(&record.id)
         .execute(&state.db)
         .await
@@ -201,7 +193,7 @@ pub async fn verify_otp(
 
     // Mark user as verified
     let user = sqlx::query_as::<_, User>(
-        "UPDATE users SET is_verified = 1 WHERE email = ? RETURNING *"
+        "UPDATE users SET is_verified = TRUE WHERE email = $1 RETURNING *"
     )
     .bind(&payload.email)
     .fetch_optional(&state.db)
@@ -225,7 +217,7 @@ pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, AppError> {
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = ?")
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(&payload.email)
         .fetch_optional(&state.db)
         .await
@@ -267,7 +259,7 @@ pub async fn guest_login(
         .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     let user = sqlx::query_as::<_, User>(
-        "INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, 'guest', 1) RETURNING *"
+        "INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES ($1, $2, $3, $4, 'guest', TRUE) RETURNING *"
     )
     .bind(guest_id)
     .bind(&guest_name)
@@ -293,27 +285,20 @@ pub async fn forgot_password(
     Json(payload): Json<ForgotPasswordRequest>,
 ) -> Result<Json<RegisterResponse>, AppError> {
     // Check if user exists
-    let _user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = ?")
+    let _user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(&payload.email)
         .fetch_optional(&state.db)
         .await
         .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
         .ok_or(AppError::NotFound("User not found".to_string()))?;
 
-    // Generate 6-digit OTP
-    let otp: String = (0..6).map(|_| rand::thread_rng().gen_range(0..10).to_string()).collect();
-    let otp_id = Uuid::new_v4();
-    let expires_at = (Utc::now() + Duration::minutes(15))
-        .format("%Y-%m-%d %H:%M:%S")
-        .to_string();
-
     sqlx::query(
-        "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES (?, ?, ?, ?, 0)"
+        "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES ($1, $2, $3, $4, FALSE)"
     )
-    .bind(otp_id.to_string())
+    .bind(otp_id)
     .bind(&payload.email)
     .bind(&otp)
-    .bind(&expires_at)
+    .bind(Utc::now() + Duration::minutes(15))
     .execute(&state.db)
     .await
     .map_err(|_| AppError::InternalServerError("Failed to generate OTP".to_string()))?;
@@ -378,8 +363,8 @@ pub async fn reset_password(
     Json(payload): Json<ResetPasswordRequest>,
 ) -> Result<Json<RegisterResponse>, AppError> {
     // Verify OTP
-    let record = sqlx::query_as::<_, (String,)> (
-        "SELECT id FROM otp_tokens WHERE email = ? AND otp = ? AND used = 0 AND expires_at > datetime('now')"
+    let record = sqlx::query_as::<_, (Uuid,)> (
+        "SELECT id FROM otp_tokens WHERE email = $1 AND otp = $2 AND used = FALSE AND expires_at > NOW()"
     )
     .bind(&payload.email)
     .bind(&payload.otp)
@@ -389,7 +374,7 @@ pub async fn reset_password(
     .ok_or(AppError::BadRequest("Invalid or expired OTP".to_string()))?;
 
     // Mark as used
-    sqlx::query("UPDATE otp_tokens SET used = 1 WHERE id = ?")
+    sqlx::query("UPDATE otp_tokens SET used = TRUE WHERE id = $1")
         .bind(&record.0)
         .execute(&state.db)
         .await
@@ -400,7 +385,7 @@ pub async fn reset_password(
         .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     // Update password
-    sqlx::query("UPDATE users SET password_hash = ? WHERE email = ?")
+    sqlx::query("UPDATE users SET password_hash = $1 WHERE email = $2")
         .bind(&password_hash)
         .bind(&payload.email)
         .execute(&state.db)
