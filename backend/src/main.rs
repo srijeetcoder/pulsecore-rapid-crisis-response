@@ -40,10 +40,10 @@ async fn main() {
     let pool = db::get_pool().await;
     
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to run migrations");
+    //sqlx::migrate!("./migrations")
+    //  .run(&pool)
+    //  .await
+    //  .expect("Failed to run migrations");
 
     let (tx, _rx) = broadcast::channel(100);
 
