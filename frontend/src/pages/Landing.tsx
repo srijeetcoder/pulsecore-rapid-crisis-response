@@ -104,31 +104,31 @@ export const Landing = () => {
               </div>
             </div>
             <div className="flex space-x-6 items-center">
-              {token && user ? (
-                <>
-                  {user?.role === 'guest' ? (
-                    <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
-                      Get Access
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={() => logout()}
-                      className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
-                    >
-                      Disconnect
-                    </button>
-                  )}
-                  <Link to="/dashboard" className="btn-primary !py-2.5 !px-6 !text-xs">
-                    Dashboard
-                  </Link>
-                </>
-              ) : (
+              {!token ? (
                 <>
                   <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
                     Access
                   </Link>
                   <Link to="/login" state={{ isRegister: true }} className="btn-primary !py-2.5 !px-6 !text-xs">
                     Get Started
+                  </Link>
+                </>
+              ) : (
+                <>
+                  {user?.role && user.role !== 'guest' ? (
+                    <button
+                      onClick={() => logout()}
+                      className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
+                    >
+                      Disconnect
+                    </button>
+                  ) : (
+                    <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
+                      Get Access
+                    </Link>
+                  )}
+                  <Link to="/dashboard" className="btn-primary !py-2.5 !px-6 !text-xs">
+                    Dashboard
                   </Link>
                 </>
               )}
