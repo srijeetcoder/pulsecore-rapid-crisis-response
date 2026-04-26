@@ -80,6 +80,10 @@ pub async fn register(
         }
     })?;
 
+    // Generate 6-digit OTP
+    let otp: String = (0..6).map(|_| rand::thread_rng().gen_range(0..10).to_string()).collect();
+    let otp_id = Uuid::new_v4();
+
     sqlx::query(
         "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES ($1, $2, $3, $4, FALSE)"
     )
@@ -291,6 +295,10 @@ pub async fn forgot_password(
         .await
         .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
         .ok_or(AppError::NotFound("User not found".to_string()))?;
+
+    // Generate 6-digit OTP
+    let otp: String = (0..6).map(|_| rand::thread_rng().gen_range(0..10).to_string()).collect();
+    let otp_id = Uuid::new_v4();
 
     sqlx::query(
         "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES ($1, $2, $3, $4, FALSE)"
