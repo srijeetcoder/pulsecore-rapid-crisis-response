@@ -79,11 +79,14 @@ export const Dashboard = () => {
     setRemovingId(null);
   };
 
-  const center: [number, number] = [0, 0];
+  // Default center: India (geographic center)
+  const center: [number, number] = [20.5937, 78.9629];
+  let zoom = 5;
   let activeIncidents = incidents.filter(i => i.status !== 'resolved');
   if (activeIncidents.length > 0 && activeIncidents[0].latitude && activeIncidents[0].longitude) {
     center[0] = activeIncidents[0].latitude;
     center[1] = activeIncidents[0].longitude;
+    zoom = 13;
   }
 
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
@@ -135,12 +138,12 @@ export const Dashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Map View */}
             <div className="card-terminal !p-1 h-[350px] overflow-hidden relative z-0 shadow-2xl">
-              <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%', borderRadius: '0.9rem' }}>
+              <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', borderRadius: '0.9rem' }}>
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                <ChangeView center={center} zoom={13} />
+                <ChangeView center={center} zoom={zoom} />
                 {activeIncidents.map((inc) => (
                   inc.latitude && inc.longitude ? (
                     <Marker key={inc.id} position={[inc.latitude, inc.longitude]}>
@@ -390,7 +393,7 @@ export const Dashboard = () => {
               {isGuest && (
                 <>
                   <br /><br />
-                  If you found our rapid crisis response service helpful, please consider registering for a full account to get access to advanced features, family tracking, and faster response times!
+                  If you found our PulseCore service helpful, please consider registering for a full account to get access to advanced features, family tracking, and faster response times!
                 </>
               )}
               {!isGuest && (

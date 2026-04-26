@@ -11,8 +11,8 @@ export const About = () => {
           <Link to="/" className="flex items-center space-x-3 group">
             <ShieldAlert className="h-8 w-8 text-accent-secondary transition-transform group-hover:scale-110" />
             <div className="flex flex-col leading-none">
-              <span className="font-heading font-bold text-xl tracking-tight uppercase">Rapid Crisis</span>
-              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Response Network</span>
+              <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
+              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
             </div>
           </Link>
           <Link 

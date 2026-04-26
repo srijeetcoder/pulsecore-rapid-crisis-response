@@ -70,8 +70,8 @@ export const Landing = () => {
                   <div className="absolute inset-0 bg-accent-secondary/20 blur-lg rounded-full animate-pulse"></div>
                 </div>
                 <div className="flex flex-col leading-none">
-                  <span className="font-heading font-bold text-xl tracking-tight uppercase">Rapid Crisis</span>
-                  <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Response Network</span>
+                  <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
+                  <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
                 </div>
               </Link>
               <div className="hidden md:flex space-x-1">
@@ -170,7 +170,7 @@ export const Landing = () => {
             </div>
 
             {/* Carousel Visuals */}
-            <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
+            <div className="relative mt-16 max-w-4xl mx-auto h-[350px] md:h-[450px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
               <div 
                 className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-1000 ease-in-out transform scale-90 group-hover:scale-95 m-8"
                 style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
@@ -258,7 +258,7 @@ export const Landing = () => {
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center space-x-3 mb-8">
                 <ShieldAlert className="h-8 w-8 text-accent-secondary" />
-                <span className="font-heading font-bold text-xl tracking-tight uppercase text-white">Rapid Crisis</span>
+                <span className="font-heading font-bold text-xl tracking-tight uppercase text-white">PulseCore</span>
               </div>
               <p className="text-stardust text-sm leading-relaxed mb-8">
                 A premier synchronized security layer for emergency synchronization and community resilience. 
@@ -293,7 +293,7 @@ export const Landing = () => {
                 </li>
                 <li className="flex items-center">
                   <Mail className="w-5 h-5 mr-4 text-accent-primary shrink-0" />
-                  <span className="font-mono">ops@rapidcrisis.org</span>
+                  <span className="font-mono">ops@pulsecore.in</span>
                 </li>
               </ul>
             </div>
@@ -301,7 +301,7 @@ export const Landing = () => {
           
           <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
             <p className="font-mono text-stardust text-[10px] uppercase tracking-widest text-center">
-              © {new Date().getFullYear()} Rapid Crisis Response Network. System v4.0.0
+              © {new Date().getFullYear()} PulseCore Response Network. System v4.0.0
             </p>
             <div className="flex space-x-6">
               <Link to="/about" className="btn-ghost !px-6 !py-2 !text-[10px] font-mono uppercase tracking-[0.2em]">Documentation</Link>

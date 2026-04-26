@@ -111,7 +111,7 @@ export const Login = () => {
             <ShieldAlert className="h-14 w-14 text-accent-secondary mx-auto" />
             <div className="absolute inset-0 bg-accent-secondary/20 blur-xl rounded-full animate-pulse"></div>
           </div>
-          <h2 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary tracking-tight uppercase">Rapid Crisis</h2>
+          <h2 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary tracking-tight uppercase">PulseCore</h2>
           <p className="mt-3 font-mono text-[10px] text-stardust uppercase tracking-[0.3em]">
             {step === 'otp' ? 'AUTH_VERIFICATION_REQUIRED' : (step === 'register' ? 'SYSTEM_REGISTRATION' : 'SYSTEM_ACCESS')}
           </p>

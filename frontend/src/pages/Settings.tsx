@@ -24,14 +24,14 @@ export const Settings = () => {
     <div className="min-h-screen bg-void text-white pt-24 px-4 font-body relative overflow-hidden">
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-      
+
       {/* Ambient Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-10 relative z-10">
           <div className="flex space-x-6">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="btn-ghost !px-6 !py-2.5 !text-[10px] font-mono uppercase tracking-[0.2em]"
             >
               <Home className="w-4 h-4 mr-2" />
@@ -77,7 +77,7 @@ export const Settings = () => {
               <h2 className="text-xl font-heading font-bold mb-8 uppercase tracking-widest text-white/80">Personal_Details</h2>
               <form onSubmit={handleSave} className="space-y-8">
                 {success && <div className="p-4 font-mono text-[10px] bg-green-500/10 border border-green-500/30 text-green-500 rounded-lg uppercase tracking-widest text-center">{success}</div>}
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Full_Name</label>
@@ -103,7 +103,7 @@ export const Settings = () => {
                     <input
                       type="tel"
                       className="input-terminal w-full"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
                   <div>

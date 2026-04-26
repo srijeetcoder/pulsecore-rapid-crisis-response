@@ -13,7 +13,7 @@ interface ChatMessage {
 const WELCOME_MESSAGE: ChatMessage = {
   id: 'welcome',
   role: 'ai',
-  text: "Initializing **Crisis_AI_System**...\nConnected to Secure Core.\n\nI can assist with:\n- High-priority emergency protocols\n- Localized data verification\n- Real-time evacuation routing\n\nPlease enter situational details.",
+  text: "Initializing **Crisis_AI_System**...\nConnected to Secure Core.\n\nI can assist with:\n- High-priority emergency protocols\n- Localized data verification\n- Real-time evacuation routing\n\n🚨 **India Emergency Contacts:**\nPolice: **100 / 112** | Ambulance: **108** | Fire: **101** | Disaster: **1078** | NDRF: **011-24363260**\n\nPlease enter situational details.",
   timestamp: new Date(),
 };
 

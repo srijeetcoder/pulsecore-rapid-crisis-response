@@ -117,14 +117,14 @@ pub async fn register(
 
         tokio::spawn(async move {
             let email_result = Message::builder()
-                .from(format!("Rapid Crisis Response <{}>", from_addr).parse().unwrap())
+                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
                 .to(to_addr.parse().unwrap())
-                .subject("Your OTP Verification Code - Rapid Crisis Response")
+                .subject("Your OTP Verification Code - PulseCore")
                 .header(ContentType::TEXT_HTML)
                 .body(format!(
                     r#"
                     <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 Rapid Crisis Response</h2>
+                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
                         <p style="color:#94a3b8;">Your email verification code is:</p>
                         <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
                         <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
@@ -261,7 +261,7 @@ pub async fn guest_login(
     let guest_id = Uuid::new_v4();
     let short_id = &guest_id.to_string()[..8];
     let guest_name = format!("Guest-{}", short_id);
-    let guest_email = format!("guest-{}@rapidcrisis.local", short_id);
+    let guest_email = format!("guest-{}@pulsecore.local", short_id);
     // A random unusable password hash — guests can never log in conventionally
     let password_hash = hash("__guest_no_password__", 4)
         .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
@@ -335,14 +335,14 @@ pub async fn forgot_password(
 
         tokio::spawn(async move {
             let email_result = Message::builder()
-                .from(format!("Rapid Crisis Response <{}>", from_addr).parse().unwrap())
+                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
                 .to(to_addr.parse().unwrap())
-                .subject("Password Reset OTP - Rapid Crisis Response")
+                .subject("Password Reset OTP - PulseCore")
                 .header(ContentType::TEXT_HTML)
                 .body(format!(
                     r#"
                     <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 Rapid Crisis Response</h2>
+                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
                         <p style="color:#94a3b8;">Your password reset verification code is:</p>
                         <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
                         <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>

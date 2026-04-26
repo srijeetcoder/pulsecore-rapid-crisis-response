@@ -218,6 +218,6 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (e) {
       console.error(e);
     }
-    return "I'm having trouble connecting right now. Please call emergency services: Police 100 | Ambulance 108 | Fire 101.";
+    return "I'm having trouble connecting right now. Please call emergency services immediately: Police 100 / 112 | Ambulance 108 | Fire 101 | Disaster Helpline 1078 | NDRF 011-24363260";
   },
 }));

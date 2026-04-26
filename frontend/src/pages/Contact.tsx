@@ -11,8 +11,8 @@ export const Contact = () => {
           <Link to="/" className="flex items-center space-x-3 group">
             <ShieldAlert className="h-8 w-8 text-accent-secondary transition-transform group-hover:scale-110" />
             <div className="flex flex-col leading-none">
-              <span className="font-heading font-bold text-xl tracking-tight uppercase">Rapid Crisis</span>
-              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Response Network</span>
+              <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
+              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
             </div>
           </Link>
           <Link 
@@ -43,7 +43,7 @@ export const Contact = () => {
                    </div>
                    <div>
                      <p className="font-mono text-[10px] text-stardust font-bold uppercase tracking-[0.2em] mb-2">Comms_Channel</p>
-                     <p className="text-lg font-heading font-bold text-white">ops@rapidcrisis.org</p>
+                     <p className="text-lg font-heading font-bold text-white">ops@pulsecore.in</p>
                    </div>
                  </div>
                  <div className="flex items-start space-x-6">
@@ -86,16 +86,16 @@ export const Contact = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
                   <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Given_Name</label>
-                  <input type="text" className="input-terminal w-full" placeholder="John" />
+                  <input type="text" className="input-terminal w-full" placeholder="Arjun" />
                 </div>
                 <div>
                   <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Family_Name</label>
-                  <input type="text" className="input-terminal w-full" placeholder="Doe" />
+                  <input type="text" className="input-terminal w-full" placeholder="Sharma" />
                 </div>
               </div>
               <div>
                 <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Email_Address</label>
-                <input type="email" className="input-terminal w-full" placeholder="john@email.com" />
+                <input type="email" className="input-terminal w-full" placeholder="arjun@email.in" />
               </div>
               <div>
                 <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Category</label>
