@@ -6,7 +6,7 @@ pub mod utils;
 
 use axum::http::{header, Method};
 use dotenvy::dotenv;
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 use std::env;
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
@@ -16,7 +16,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: SqlitePool,
+    pub db: PgPool,
     pub tx: broadcast::Sender<String>,
 }
 
