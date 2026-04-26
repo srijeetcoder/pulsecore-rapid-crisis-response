@@ -1,16 +1,13 @@
-use sqlx::{sqlite::{SqliteConnectOptions, SqlitePoolOptions}, SqlitePool};
-use std::str::FromStr;
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::env;
 
-pub async fn get_pool() -> SqlitePool {
-    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:sqlite.db".to_string());
-    let options = SqliteConnectOptions::from_str(&database_url)
-        .expect("Invalid database URL")
-        .create_if_missing(true);
+pub async fn get_pool() -> PgPool {
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
 
-    SqlitePoolOptions::new()
+    PgPoolOptions::new()
         .max_connections(5)
-        .connect_with(options)
+        .connect(&database_url)
         .await
-        .expect("Failed to connect to SQLite")
+        .expect("Failed to connect to PostgreSQL")
 }
