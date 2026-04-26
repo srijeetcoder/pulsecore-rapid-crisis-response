@@ -3,6 +3,14 @@ import { useStore } from '../store/store';
 import { ShieldAlert, Activity, MapPin, Brain, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, MapPin as MapPinIcon, Globe, MessageCircle, Share2, Navigation } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+interface NewsItem {
+  title: string;
+  pubDate: string;
+  link: string;
+  description: string;
+  image: string;
+}
+
 export const Landing = () => {
   const navigate = useNavigate();
   const token = useStore((state) => state.token);
@@ -11,34 +19,51 @@ export const Landing = () => {
   const isGuestLoading = useStore((state) => state.isGuestLoading);
 
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    {
-      title: "Real-Time Emergency Synchronization",
-      desc: "Instantly connect with responders through our AI-driven command interface.",
-      image: "/emergency_command_center_1777093052968.png"
-    },
-    {
-      title: "Personal SOS Monitoring",
-      desc: "One-tap emergency broadcast with precise geolocation tracking.",
-      image: "/mobile_sos_app_ui_1777093078073.png"
-    },
-    {
-      title: "Community Safety Network",
-      desc: "Built on trust and cutting-edge synchronization technology.",
-      image: "/community_safety_team_1777093131227.png"
-    }
-  ];
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [isNewsLoading, setIsNewsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Demergency%2BOR%2Bhealth%2BOR%2Bdanger%2BIndia%26hl%3Den-IN%26gl%3DIN%26ceid%3DIN%3Aen');
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const formattedNews = data.items.slice(0, 10).map((item: any) => ({
+            title: item.title,
+            pubDate: item.pubDate,
+            link: item.link,
+            description: item.description,
+            image: "" // Background images removed
+          }));
+          setNewsItems(formattedNews);
+        } else {
+          setNewsItems([{
+            title: "Network Connectivity Issue - Check Console",
+            description: "Unable to sync with global news grid. Showing fallback protocol.",
+            link: "#",
+            pubDate: new Date().toISOString(),
+            image: ""
+          }]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch news:", err);
+      } finally {
+        setIsNewsLoading(false);
+      }
+    };
+    fetchNews();
   }, []);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  useEffect(() => {
+    if (newsItems.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % newsItems.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [newsItems.length]);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % newsItems.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + newsItems.length) % newsItems.length);
 
   const handleEmergency = async () => {
     if (!token) {
@@ -119,16 +144,10 @@ export const Landing = () => {
               Emergency Response Core
             </div>
             <h1 className="text-5xl md:text-8xl font-heading font-bold tracking-tighter mb-10 leading-[1.1] max-w-5xl">
-              {slides[currentSlide].title.split(' ').map((word, i, arr) =>
-                i >= arr.length - 2 ? (
-                  <span key={i} className="text-gradient-accent">
-                    {word}{' '}
-                  </span>
-                ) : word + ' '
-              )}
+              Next-Gen Crisis <span className="text-gradient-accent">Response Synchronization</span>
             </h1>
             <p className="mt-4 max-w-2xl text-xl text-stardust font-body leading-relaxed mb-12">
-              {slides[currentSlide].desc}
+              The premier synchronized security layer for emergency management, real-time threat intelligence, and community resilience.
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-6 sm:space-y-0 sm:space-x-8">
@@ -166,26 +185,37 @@ export const Landing = () => {
           </div>
 
           {/* Carousel Visuals */}
-          <div className="relative mt-16 max-w-4xl mx-auto h-[350px] md:h-[450px] rounded-3xl overflow-hidden shadow-2xl border border-gray-700 group animate-in fade-in slide-in-from-right duration-700 bg-void/50">
-            <div
-              className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-1000 ease-in-out transform scale-90 group-hover:scale-95 m-8"
-              style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
-            ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent pointer-events-none"></div>
+          <div className="relative mt-16 max-w-4xl mx-auto h-[200px] md:h-[260px] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group animate-in fade-in slide-in-from-right duration-700 bg-white/[0.02] backdrop-blur-sm">
+            {isNewsLoading ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
+                <Navigation className="w-8 h-8 animate-spin text-accent-primary" />
+                <p className="font-mono text-stardust uppercase tracking-widest text-[10px] animate-pulse">Syncing Live News Feed...</p>
+              </div>
+            ) : newsItems.length > 0 && (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/5 via-transparent to-transparent pointer-events-none"></div>
 
-            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
-              <div className="space-y-1">
-                <div className="flex space-x-2">
-                  {slides.map((_, i) => (
-                    <div key={i} className={i === currentSlide ? "h-1.5 rounded-full transition-all duration-500 w-8 bg-accent-primary" : "h-1.5 rounded-full transition-all duration-500 w-2 bg-white/30"}></div>
-                  ))}
+                <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-16">
+                  <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.2em] mb-3 block animate-fade-in opacity-70">LIVE CRISIS FEED // {newsItems[currentSlide].pubDate.split(' ')[0]}</span>
+                  <h3 className="text-xl md:text-2xl font-heading font-bold text-white mb-4 leading-tight animate-slide-up line-clamp-2" dangerouslySetInnerHTML={{ __html: newsItems[currentSlide].title.split(' - ')[0] }} />
+                  <a href={newsItems[currentSlide].link} target="_blank" rel="noreferrer" className="inline-flex items-center text-[11px] font-mono uppercase tracking-widest text-stardust hover:text-white transition-colors border-b border-white/10 hover:border-accent-primary/50 pb-1 w-fit relative z-30">
+                    Read Full Alert <ArrowRight className="ml-2 w-3 h-3" />
+                  </a>
                 </div>
-              </div>
-              <div className="flex space-x-2">
-                <button onClick={prevSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronLeft className="w-5 h-5" /></button>
-                <button onClick={nextSlide} className="p-3 bg-void/80 hover:bg-accent-primary rounded-full transition-all border border-white/10"><ChevronRight className="w-5 h-5" /></button>
-              </div>
-            </div>
+
+                <div className="absolute bottom-6 left-10 right-10 flex justify-between items-center z-20">
+                  <div className="flex space-x-1.5">
+                    {newsItems.map((_, i) => (
+                      <div key={i} className={i === currentSlide ? "h-1 rounded-full transition-all duration-500 w-6 bg-accent-primary" : "h-1 rounded-full transition-all duration-500 w-1 bg-white/10"}></div>
+                    ))}
+                  </div>
+                  <div className="flex space-x-2 relative z-30">
+                    <button onClick={prevSlide} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/5 cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={nextSlide} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/5 cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
