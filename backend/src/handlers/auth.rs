@@ -167,7 +167,7 @@ pub async fn verify_otp(
     // Only fetch id — avoids SQLite DateTime<Utc> deserialization issues
     #[derive(sqlx::FromRow)]
     struct OtpRecord {
-        id: String,
+        id: uuid::Uuid,
     }
 
     println!("🔍 Verifying OTP for email='{}' otp='{}'", payload.email, payload.otp);
