@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Fix leaflet icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -109,7 +110,11 @@ export const Dashboard = () => {
       {/* Background Textures */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center"
+        >
           <div className="flex items-center space-x-3">
             <Link
               to="/"
@@ -144,15 +149,17 @@ export const Dashboard = () => {
                 <SettingsIcon className="w-6 h-6 text-stardust group-hover:text-accent-primary transition-colors" />
               </Link>
             )}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setIsSOSOpen(true)}
               className="btn-primary !px-10 !py-3.5"
             >
               <ShieldAlert className="w-5 h-5 mr-3 animate-pulse" />
               INITIATE SOS
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -191,90 +198,96 @@ export const Dashboard = () => {
                 )}
               </div>
               <div className="space-y-4">
-                {incidents
-                  .filter(inc => isAuthority || inc.reporter_id === user?.id)
-                  .map((incident) => (
-                  <div
-                    key={incident.id}
-                    className={`p-6 bg-void rounded-2xl border transition-all group relative overflow-hidden ${incident.status === 'resolved'
-                        ? 'border-green-800/20 opacity-60 hover:opacity-100'
-                        : 'border-white/5 hover:border-accent-primary/30 shadow-lg hover:shadow-accent-primary/5'
-                      }`}
-                  >
-                    <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-accent-primary/20 uppercase tracking-widest">ID_{incident.id.slice(-6)}</div>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <div className="flex items-center flex-wrap gap-2">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${incident.severity === 'critical' ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/50 neon-text-red' :
-                              incident.severity === 'high' ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/50 neon-text-purple' :
-                                'bg-stardust/20 text-stardust border border-stardust/50'
-                            }`}>
-                            {incident.severity}
-                          </span>
-                          <span className="text-stardust font-mono text-[10px] uppercase tracking-widest flex items-center">
-                            <Clock className="w-3 h-3 mr-1.5" />
-                            {format(new Date(incident.created_at), 'HH:mm:ss')}
-                          </span>
-                          {incident.emergency_type && (
-                            <span className="text-primary text-sm font-semibold flex items-center">
-                              <AlertCircle className="w-4 h-4 mr-1" />
-                              {incident.emergency_type}
+                <AnimatePresence mode="popLayout">
+                  {incidents
+                    .filter(inc => isAuthority || inc.reporter_id === user?.id)
+                    .map((incident) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={incident.id}
+                      className={`p-6 bg-void rounded-2xl border transition-all group relative overflow-hidden ${incident.status === 'resolved'
+                          ? 'border-green-800/20 opacity-60 hover:opacity-100'
+                          : 'border-white/5 hover:border-accent-primary/30 shadow-lg hover:shadow-accent-primary/5'
+                        }`}
+                    >
+                      <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-accent-primary/20 uppercase tracking-widest">ID_{incident.id.slice(-6)}</div>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex items-center flex-wrap gap-2">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${incident.severity === 'critical' ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/50 neon-text-red' :
+                                incident.severity === 'high' ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/50 neon-text-purple' :
+                                  'bg-stardust/20 text-stardust border border-stardust/50'
+                              }`}>
+                              {incident.severity}
                             </span>
+                            <span className="text-stardust font-mono text-[10px] uppercase tracking-widest flex items-center">
+                              <Clock className="w-3 h-3 mr-1.5" />
+                              {format(new Date(incident.created_at), 'HH:mm:ss')}
+                            </span>
+                            {incident.emergency_type && (
+                              <span className="text-primary text-sm font-semibold flex items-center">
+                                <AlertCircle className="w-4 h-4 mr-1" />
+                                {incident.emergency_type}
+                              </span>
+                            )}
+                            {incident.status === 'resolved' && (
+                              <span className="px-3 py-1 text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 rounded-full font-mono font-bold uppercase tracking-widest">
+                                STATUS_RESOLVED
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xl font-heading font-bold text-white mt-4">{incident.location}</p>
+
+                          {incident.details && (
+                            <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5 shadow-inner">
+                              <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Details</span>
+                              <p className="text-sm text-stardust leading-relaxed">{incident.details}</p>
+                            </div>
                           )}
-                          {incident.status === 'resolved' && (
-                            <span className="px-3 py-1 text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 rounded-full font-mono font-bold uppercase tracking-widest">
-                              STATUS_RESOLVED
-                            </span>
+
+                          {incident.ai_advice && (
+                            <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
+                              <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
+                              <p className="text-sm text-stardust flex items-start">
+                                <span className="mr-3 text-accent-primary">⚙️</span> {incident.ai_advice}
+                              </p>
+                            </div>
                           )}
                         </div>
-                        <p className="text-xl font-heading font-bold text-white mt-4">{incident.location}</p>
 
-                        {incident.details && (
-                          <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5 shadow-inner">
-                            <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Details</span>
-                            <p className="text-sm text-stardust leading-relaxed">{incident.details}</p>
-                          </div>
-                        )}
-
-                        {incident.ai_advice && (
-                          <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
-                            <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
-                            <p className="text-sm text-stardust flex items-start">
-                              <span className="mr-3 text-accent-primary">⚙️</span> {incident.ai_advice}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col space-y-2 ml-4 shrink-0">
-                        <select
-                          value={incident.status}
-                          onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}
-                          disabled={!isAuthority}
-                          className="input-terminal !h-10 !text-xs font-mono uppercase tracking-widest disabled:opacity-40"
-                        >
-                          <option value="reported">Reported</option>
-                          <option value="investigating">Auditing</option>
-                          <option value="resolving">Syncing</option>
-                          <option value="resolved">Proved</option>
-                        </select>
-
-                        {/* Remove button — only for resolved incidents, only for authorities */}
-                        {isAuthority && incident.status === 'resolved' && (
-                          <button
-                            onClick={() => handleRemove(incident.id)}
-                            disabled={removingId === incident.id}
-                            title="Remove resolved case"
-                            className="btn-danger !px-3 !py-2 !text-xs !rounded-lg !bg-red-500/10 hover:!bg-red-600 !text-red-400 hover:!text-white border !border-red-500/30 hover:!border-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        <div className="flex flex-col space-y-2 ml-4 shrink-0">
+                          <select
+                            value={incident.status}
+                            onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}
+                            disabled={!isAuthority}
+                            className="input-terminal !h-10 !text-xs font-mono uppercase tracking-widest disabled:opacity-40"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            {removingId === incident.id ? 'Removing…' : 'Remove'}
-                          </button>
-                        )}
+                            <option value="reported">Reported</option>
+                            <option value="investigating">Auditing</option>
+                            <option value="resolving">Syncing</option>
+                            <option value="resolved">Proved</option>
+                          </select>
+
+                          {/* Remove button — only for resolved incidents, only for authorities */}
+                          {isAuthority && incident.status === 'resolved' && (
+                            <button
+                              onClick={() => handleRemove(incident.id)}
+                              disabled={removingId === incident.id}
+                              title="Remove resolved case"
+                              className="btn-danger !px-3 !py-2 !text-xs !rounded-lg !bg-red-500/10 hover:!bg-red-600 !text-red-400 hover:!text-white border !border-red-500/30 hover:!border-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              {removingId === incident.id ? 'Removing…' : 'Remove'}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
                 {incidents.length === 0 && (
                   <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-700 rounded-xl">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-600" />
@@ -336,69 +349,84 @@ export const Dashboard = () => {
       </div>
 
       {/* SOS Modal */}
-      {isSOSOpen && (
-        <div className="fixed inset-0 bg-void/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="card-alert max-w-md w-full border-accent-secondary/30 shadow-2xl shadow-accent-secondary/5">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-heading font-bold text-accent-secondary flex items-center neon-text-red">
-                <ShieldAlert className="w-7 h-7 mr-3" />
-                INITIATE SOS
-              </h2>
-              <button onClick={() => setIsSOSOpen(false)} className="text-stardust hover:text-white transition-colors">✕</button>
-            </div>
-
-            {user?.role === 'guest' && (
-              <div className="mb-8 p-4 bg-accent-secondary/5 border border-accent-secondary/20 rounded-xl">
-                <p className="font-mono text-[10px] text-stardust leading-relaxed uppercase tracking-widest">
-                  🧑 Reporting as <strong className="text-accent-secondary">GUEST_USER</strong>. Alert will be prioritized immediately.
-                </p>
-              </div>
-            )}
-
-            <form onSubmit={handleSOS} className="space-y-8">
-              <div>
-                <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Emergency Details</label>
-                <textarea
-                  required
-                  value={panicMessage}
-                  onChange={(e) => setPanicMessage(e.target.value)}
-                  placeholder="Describe the situation for AI analysis..."
-                  className="input-terminal w-full h-32 resize-none"
-                />
+      <AnimatePresence>
+        {isSOSOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-void/90 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="card-alert max-w-md w-full border-accent-secondary/30 shadow-2xl shadow-accent-secondary/5"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-heading font-bold text-accent-secondary flex items-center neon-text-red">
+                  <ShieldAlert className="w-7 h-7 mr-3" />
+                  INITIATE SOS
+                </h2>
+                <button onClick={() => setIsSOSOpen(false)} className="text-stardust hover:text-white transition-colors">✕</button>
               </div>
 
-              <div>
-                <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Unit Geolocation</label>
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Physical location or Lat/Lng..."
-                    className="input-terminal flex-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={getLocation}
-                    className="btn-outline !px-4 !py-0 !h-12 !rounded-xl"
-                    title="Fetch precision GPS"
-                  >
-                    <Navigation className={`w-5 h-5 ${isLocating ? 'animate-spin' : ''}`} />
-                  </button>
+              {user?.role === 'guest' && (
+                <div className="mb-8 p-4 bg-accent-secondary/5 border border-accent-secondary/20 rounded-xl">
+                  <p className="font-mono text-[10px] text-stardust leading-relaxed uppercase tracking-widest">
+                    🧑 Reporting as <strong className="text-accent-secondary">GUEST_USER</strong>. Alert will be prioritized immediately.
+                  </p>
                 </div>
-              </div>
+              )}
 
-              <button
-                type="submit"
-                className="btn-primary w-full !py-5 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-primary/20 active:scale-95 flex items-center justify-center"
-              >
-                <Activity className="w-5 h-5 mr-2 animate-pulse" />
-                Report Emergency
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={handleSOS} className="space-y-8">
+                <div>
+                  <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Emergency Details</label>
+                  <textarea
+                    required
+                    value={panicMessage}
+                    onChange={(e) => setPanicMessage(e.target.value)}
+                    placeholder="Describe the situation for AI analysis..."
+                    className="input-terminal w-full h-32 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Unit Geolocation</label>
+                  <div className="flex space-x-3">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Physical location or Lat/Lng..."
+                      className="input-terminal flex-1"
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      type="button"
+                      onClick={getLocation}
+                      className="btn-outline !px-4 !py-0 !h-12 !rounded-xl"
+                      title="Fetch precision GPS"
+                    >
+                      <Navigation className={`w-5 h-5 ${isLocating ? 'animate-spin' : ''}`} />
+                    </motion.button>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="btn-primary w-full !py-5 shadow-lg shadow-accent-primary/20 flex items-center justify-center"
+                >
+                  <Activity className="w-5 h-5 mr-2 animate-pulse" />
+                  Report Emergency
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Guest Registration Popup */}
       {isRegistrationPopupOpen && (
