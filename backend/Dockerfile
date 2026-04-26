@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:latest as builder
+FROM rust:1.88-bookworm as builder
 WORKDIR /usr/src/app
 COPY . .
 RUN apt-get update && apt-get install -y pkg-config libssl-dev
