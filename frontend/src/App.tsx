@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store/store';
 import { Landing } from './pages/Landing';
@@ -23,6 +24,13 @@ function GlobalWebSocket() {
 
 function App() {
   const token = useStore((state) => state.token);
+  const fetchProfile = useStore((state) => state.fetchProfile);
+
+  useEffect(() => {
+    if (token) {
+      fetchProfile();
+    }
+  }, [token, fetchProfile]);
 
   return (
     <Router>

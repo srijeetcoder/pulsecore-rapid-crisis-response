@@ -92,6 +92,17 @@ export const Dashboard = () => {
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
+        <div className="animate-pulse flex flex-col items-center">
+          <ShieldAlert className="w-12 h-12 text-accent-primary mb-4" />
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-stardust">Establishing Secure Sync...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-transparent text-white p-6 pt-24 font-body relative overflow-hidden">
       {/* Background Textures */}

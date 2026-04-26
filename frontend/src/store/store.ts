@@ -41,6 +41,7 @@ interface AppState {
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   chatWithAI: (messages: {role: string, text: string}[], context?: string) => Promise<string>;
+  fetchProfile: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -220,5 +221,24 @@ export const useStore = create<AppState>((set, get) => ({
       console.error(e);
     }
     return "I'm having trouble connecting right now. Please call emergency services immediately: Police 100 / 112 | Ambulance 108 | Fire 101 | Disaster Helpline 1078 | NDRF 011-24363260";
+  },
+  
+  fetchProfile: async () => {
+    const { token } = get();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const user = await res.json();
+        set({ user });
+      } else {
+        // If token is invalid, clear it
+        get().logout();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   },
 }));

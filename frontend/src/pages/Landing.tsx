@@ -103,7 +103,7 @@ export const Landing = () => {
               </div>
             </div>
             <div className="flex space-x-6 items-center">
-              {token ? (
+              {token && user ? (
                 <>
                   {user?.role === 'guest' ? (
                     <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
