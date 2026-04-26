@@ -14,6 +14,7 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/auth/forgot-password", post(auth::forgot_password))
         .route("/api/auth/reset-password", post(auth::reset_password))
         .route("/api/auth/guest", post(auth::guest_login))
+        .route("/api/auth/me", get(auth::get_profile))
         .route("/api/incidents", get(incidents::list_incidents).post(incidents::create_incident))
         .route("/api/incidents/{id}/status", put(incidents::update_status))
         .route("/api/incidents/{id}", delete(incidents::delete_incident))

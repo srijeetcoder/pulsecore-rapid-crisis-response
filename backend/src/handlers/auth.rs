@@ -405,3 +405,16 @@ pub async fn reset_password(
         email: payload.email,
     }))
 }
+
+pub async fn get_profile(
+    State(state): State<AppState>,
+    claims: crate::utils::jwt::Claims,
+) -> Result<Json<User>, AppError> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::NotFound("User not found".to_string()))?;
+    
+    Ok(Json(user))
+}
