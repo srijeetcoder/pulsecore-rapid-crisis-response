@@ -217,3 +217,130 @@ pub async fn delete_incident(
 
     Ok(StatusCode::NO_CONTENT)
 }
+
+#[derive(Deserialize)]
+pub struct ToggleRespondRequest {
+    pub is_responding: bool,
+}
+
+pub async fn toggle_respond(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    claims: Claims,
+    Json(payload): Json<ToggleRespondRequest>,
+) -> Result<Json<Incident>, AppError> {
+    if claims.role != "responder" && claims.role != "staff" {
+        return Err(AppError::Unauthorized("Only authorities can respond to incidents".to_string()));
+    }
+
+    let responder_id = if payload.is_responding {
+        Some(claims.sub)
+    } else {
+        None
+    };
+
+    let incident = sqlx::query_as::<_, Incident>(
+        "UPDATE incidents SET responder_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *"
+    )
+    .bind(responder_id)
+    .bind(id)
+    .fetch_optional(&state.db)
+    .await
+    .map_err(|e| {
+        println!("Update responder error: {}", e);
+        AppError::InternalServerError("Failed to update responder".to_string())
+    })?
+    .ok_or(AppError::NotFound("Incident not found".to_string()))?;
+
+    let msg = serde_json::json!({
+        "type": "UPDATE_INCIDENT",
+        "data": incident
+    }).to_string();
+    let _ = state.tx.send(msg);
+
+    Ok(Json(incident))
+}
+
+pub async fn get_messages(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    claims: Claims,
+) -> Result<Json<Vec<crate::models::Message>>, AppError> {
+    if claims.role == "guest" || claims.role == "user" {
+        let is_owner = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM incidents WHERE id = $1 AND reporter_id = $2)"
+        )
+        .bind(id)
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Database error".to_string()))?;
+
+        if !is_owner {
+            return Err(AppError::Unauthorized("Unauthorized access to incident messages".to_string()));
+        }
+    }
+
+    let messages = sqlx::query_as::<_, crate::models::Message>(
+        "SELECT * FROM messages WHERE incident_id = $1 ORDER BY timestamp ASC"
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await
+    .map_err(|e| {
+        println!("Fetch messages error: {}", e);
+        AppError::InternalServerError("Failed to fetch messages".to_string())
+    })?;
+
+    Ok(Json(messages))
+}
+
+#[derive(Deserialize)]
+pub struct SendMessageRequest {
+    pub content: String,
+}
+
+pub async fn send_message(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    claims: Claims,
+    Json(payload): Json<SendMessageRequest>,
+) -> Result<Json<crate::models::Message>, AppError> {
+    if claims.role == "guest" || claims.role == "user" {
+        let is_owner = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM incidents WHERE id = $1 AND reporter_id = $2)"
+        )
+        .bind(id)
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Database error".to_string()))?;
+
+        if !is_owner {
+            return Err(AppError::Unauthorized("Unauthorized access to incident".to_string()));
+        }
+    }
+
+    let message_id = Uuid::new_v4();
+    let message = sqlx::query_as::<_, crate::models::Message>(
+        "INSERT INTO messages (id, incident_id, sender_id, content) VALUES ($1, $2, $3, $4) RETURNING *"
+    )
+    .bind(message_id)
+    .bind(id)
+    .bind(claims.sub)
+    .bind(&payload.content)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|e| {
+        println!("Send message error: {}", e);
+        AppError::InternalServerError("Failed to send message".to_string())
+    })?;
+
+    let msg = serde_json::json!({
+        "type": "NEW_MESSAGE",
+        "data": message
+    }).to_string();
+    let _ = state.tx.send(msg);
+
+    Ok(Json(message))
+}

@@ -19,6 +19,8 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/auth/me", get(auth::get_profile))
         .route("/api/incidents", get(incidents::list_incidents).post(incidents::create_incident))
         .route("/api/incidents/{id}/status", put(incidents::update_status))
+        .route("/api/incidents/{id}/respond", post(incidents::toggle_respond))
+        .route("/api/incidents/{id}/messages", get(incidents::get_messages).post(incidents::send_message))
         .route("/api/incidents/{id}", delete(incidents::delete_incident))
         .route("/api/ai/chat", post(ai::ai_chat))
         .route("/api/ws", get(ws::ws_handler))

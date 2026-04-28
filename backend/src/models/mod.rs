@@ -29,6 +29,7 @@ pub struct Incident {
     pub ai_advice: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub responder_id: Option<Uuid>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]

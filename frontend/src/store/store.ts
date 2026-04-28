@@ -7,6 +7,14 @@ interface User {
   role: string;
 }
 
+export interface Message {
+  id: string;
+  incident_id: string;
+  sender_id: string;
+  content: string;
+  timestamp: string;
+}
+
 export interface Incident {
   id: string;
   reporter_id: string;
@@ -19,12 +27,15 @@ export interface Incident {
   longitude?: number;
   ai_advice?: string;
   created_at: string;
+  responder_id?: string;
 }
 
 interface AppState {
   user: User | null;
   token: string | null;
   incidents: Incident[];
+  messages: Record<string, Message[]>;
+  activeChatIncidentId: string | null;
   isGuestLoading: boolean;
   isRegistrationPopupOpen: boolean;
   setRegistrationPopupOpen: (isOpen: boolean) => void;
@@ -42,6 +53,11 @@ interface AppState {
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   chatWithAI: (messages: {role: string, text: string}[], context?: string) => Promise<string>;
   fetchProfile: () => Promise<void>;
+  setActiveChatIncidentId: (id: string | null) => void;
+  toggleRespond: (id: string, isResponding: boolean) => Promise<void>;
+  fetchMessages: (incidentId: string) => Promise<void>;
+  sendMessage: (incidentId: string, content: string) => Promise<void>;
+  addMessageLocally: (message: Message) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -64,10 +80,13 @@ export const useStore = create<AppState>((set, get) => ({
   })(),
   token: localStorage.getItem('token') === 'null' ? null : localStorage.getItem('token'),
   incidents: [],
+  messages: {},
+  activeChatIncidentId: null,
   isGuestLoading: false,
   isRegistrationPopupOpen: false,
 
   setRegistrationPopupOpen: (isOpen) => set({ isRegistrationPopupOpen: isOpen }),
+  setActiveChatIncidentId: (id) => set({ activeChatIncidentId: id }),
 
   setAuth: (user, token) => {
     if (token) {
@@ -262,4 +281,76 @@ export const useStore = create<AppState>((set, get) => ({
       console.error(e);
     }
   },
+
+  toggleRespond: async (id, isResponding) => {
+    const { token } = get();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/incidents/${id}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ is_responding: isResponding })
+      });
+      if (res.ok) {
+        const updatedIncident = await res.json();
+        get().addOrUpdateIncident(updatedIncident);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  fetchMessages: async (incidentId) => {
+    const { token } = get();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/incidents/${incidentId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set((state) => ({
+          messages: { ...state.messages, [incidentId]: data }
+        }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  sendMessage: async (incidentId, content) => {
+    const { token } = get();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/incidents/${incidentId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        const msg = await res.json();
+        get().addMessageLocally(msg);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  addMessageLocally: (message) => set((state) => {
+    const incidentMessages = state.messages[message.incident_id] || [];
+    const exists = incidentMessages.find((m) => m.id === message.id);
+    if (exists) return state;
+    return {
+      messages: {
+        ...state.messages,
+        [message.incident_id]: [...incidentMessages, message]
+      }
+    };
+  }),
 }));

@@ -39,6 +39,11 @@ async fn main() {
 
     let pool = db::get_pool().await;
     
+    // Safe raw SQL migration to ensure responder_id column exists
+    let _ = sqlx::query("ALTER TABLE incidents ADD COLUMN IF NOT EXISTS responder_id UUID REFERENCES users(id)")
+        .execute(&pool)
+        .await;
+
     // Run migrations
     //sqlx::migrate!("./migrations")
     //  .run(&pool)

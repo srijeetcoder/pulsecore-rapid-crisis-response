@@ -45,6 +45,8 @@ export const useWebSocket = () => {
             addOrUpdateIncident(data.data);
           } else if (data.type === 'DELETE_INCIDENT') {
             removeIncidentLocally(data.data.id);
+          } else if (data.type === 'NEW_MESSAGE') {
+            useStore.getState().addMessageLocally(data.data);
           }
         } catch (e) {
           console.error('Failed to parse WS message', e);

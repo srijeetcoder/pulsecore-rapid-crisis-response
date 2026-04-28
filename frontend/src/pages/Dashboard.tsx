@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LiveChatWidget } from '../components/LiveChatWidget';
 import { useStore } from '../store/store';
 import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,7 +24,7 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
 }
 
 export const Dashboard = () => {
-  const { incidents, user, token, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen, guestLogin } = useStore();
+  const { incidents, user, token, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen, guestLogin, toggleRespond, setActiveChatIncidentId } = useStore();
   const [searchParams] = useSearchParams();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [location, setLocation] = useState('');
@@ -35,13 +36,19 @@ export const Dashboard = () => {
   const [lng, setLng] = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
+  const isAuthority = user?.role === 'responder' || user?.role === 'staff';
+  const isGuest = user?.role === 'guest';
+  // Pure anonymous guests are auto-generated with @pulsecore.local emails.
+  // Email-registered users who chose the 'guest' role should still see Settings.
+  const isPureGuest = isGuest && (user?.email?.endsWith('@pulsecore.local') ?? false);
+
   useEffect(() => {
     fetchIncidents();
   }, [fetchIncidents]);
 
   // Auto-open SOS modal if ?sos=1 is in the URL (guest emergency flow)
   useEffect(() => {
-    if (searchParams.get('sos') === '1') {
+    if (searchParams.get('sos') === '1' && !isAuthority) {
       setIsSOSOpen(true);
     }
   }, [searchParams]);
@@ -137,12 +144,6 @@ export const Dashboard = () => {
     zoom = 13;
   }
 
-  const isAuthority = user?.role === 'responder' || user?.role === 'staff';
-  const isGuest = user?.role === 'guest';
-  // Pure anonymous guests are auto-generated with @pulsecore.local emails.
-  // Email-registered users who chose the 'guest' role should still see Settings.
-  const isPureGuest = isGuest && (user?.email?.endsWith('@pulsecore.local') ?? false);
-
   // Wait for the full profile sync (ensures we have user.id, etc.)
   if (!user || !user.id) {
     return (
@@ -199,15 +200,17 @@ export const Dashboard = () => {
                 <SettingsIcon className="w-6 h-6 text-stardust group-hover:text-accent-primary transition-colors" />
               </Link>
             )}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsSOSOpen(true)}
-              className="btn-primary !px-10 !py-3.5"
-            >
-              <ShieldAlert className="w-5 h-5 mr-3 animate-pulse" />
-              INITIATE SOS
-            </motion.button>
+            {!isAuthority && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsSOSOpen(true)}
+                className="btn-primary !px-10 !py-3.5"
+              >
+                <ShieldAlert className="w-5 h-5 mr-3 animate-pulse" />
+                INITIATE SOS
+              </motion.button>
+            )}
           </div>
         </motion.div>
 
@@ -320,6 +323,30 @@ export const Dashboard = () => {
                             <option value="resolving">Syncing</option>
                             <option value="resolved">Proved</option>
                           </select>
+
+                          {isAuthority && (
+                            <div className="flex items-center space-x-2 mt-1 bg-surface/30 p-2 rounded-lg border border-white/5">
+                              <input
+                                type="checkbox"
+                                id={`respond-${incident.id}`}
+                                checked={incident.responder_id === user?.id}
+                                onChange={(e) => toggleRespond(incident.id, e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-700 text-accent-secondary focus:ring-accent-secondary bg-void cursor-pointer"
+                              />
+                              <label htmlFor={`respond-${incident.id}`} className="text-[10px] font-mono uppercase tracking-widest text-stardust cursor-pointer">
+                                Responding
+                              </label>
+                            </div>
+                          )}
+
+                          {isAuthority && incident.responder_id === user?.id && (
+                            <button
+                              onClick={() => setActiveChatIncidentId(incident.id)}
+                              className="btn-outline !px-3 !py-2 !text-[10px] font-mono uppercase tracking-wider !rounded-xl mt-1 !border-accent-secondary/30 hover:!bg-accent-secondary/10 !text-accent-secondary"
+                            >
+                              Open Chat
+                            </button>
+                          )}
 
                           {/* Remove button — only for resolved incidents, only for authorities */}
                           {isAuthority && incident.status === 'resolved' && (
@@ -514,7 +541,7 @@ export const Dashboard = () => {
             <h2 className="text-2xl font-bold text-white mb-2">Emergency Resolved</h2>
             <p className="text-gray-400 mb-6">
               The emergency you reported has been successfully resolved by our responder team.
-              {isGuest && (
+              {isPureGuest && (
                 <>
                   <br /><br />
                   If you found our PulseCore service helpful, please consider registering for a full account to get access to advanced features, family tracking, and faster response times!
@@ -528,7 +555,7 @@ export const Dashboard = () => {
               )}
             </p>
             <div className="flex flex-col space-y-3">
-              {isGuest ? (
+              {isPureGuest ? (
                 <>
                   <button
                     onClick={() => {
@@ -575,6 +602,7 @@ export const Dashboard = () => {
           </div>
         </div>
       )}
+      <LiveChatWidget />
     </div>
   );
 };
