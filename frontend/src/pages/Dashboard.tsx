@@ -5,7 +5,7 @@ import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as S
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Fix leaflet icon
@@ -26,6 +26,7 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
 export const Dashboard = () => {
   const { incidents, user, token, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen, guestLogin, toggleRespond, setActiveChatIncidentId } = useStore();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [location, setLocation] = useState('');
   const [panicMessage, setPanicMessage] = useState('');
@@ -126,6 +127,24 @@ export const Dashboard = () => {
     setGeocodeError('');
     setLat(null);
     setLng(null);
+  };
+
+  const handleSOSClose = async () => {
+    setIsSOSOpen(false);
+    if (isPureGuest) {
+      if (token) {
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/auth/cleanup-guest`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (e) {
+          console.error('Cleanup failed:', e);
+        }
+      }
+      useStore.getState().logout();
+    }
+    navigate('/');
   };
 
   const handleRemove = async (id: string) => {
@@ -445,7 +464,7 @@ export const Dashboard = () => {
                   <ShieldAlert className="w-7 h-7 mr-3" />
                   INITIATE SOS
                 </h2>
-                <button onClick={() => setIsSOSOpen(false)} className="text-stardust hover:text-white transition-colors">✕</button>
+                <button onClick={handleSOSClose} className="text-stardust hover:text-white transition-colors">✕</button>
               </div>
 
               {user?.role === 'guest' && (

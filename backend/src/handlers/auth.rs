@@ -254,14 +254,35 @@ pub async fn cleanup_guest(
         return Err(AppError::Unauthorized("Only temporary guests can be cleaned up".to_string()));
     }
 
-    // Delete incidents
+    // 1. Delete messages associated with guest incidents
+    sqlx::query("DELETE FROM messages WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete related messages".to_string()))?;
+
+    // 2. Delete messages sent by guest
+    sqlx::query("DELETE FROM messages WHERE sender_id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete guest messages".to_string()))?;
+
+    // 3. Delete incident reports associated with guest incidents
+    sqlx::query("DELETE FROM incident_reports WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete related incident reports".to_string()))?;
+
+    // 4. Delete incidents
     sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
         .bind(claims.sub)
         .execute(&state.db)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete incidents".to_string()))?;
 
-    // Delete user
+    // 5. Delete user
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(claims.sub)
         .execute(&state.db)
@@ -283,23 +304,65 @@ pub async fn delete_account(
         .await
         .map_err(|_| AppError::NotFound("User not found".to_string()))?;
 
+    // 1. Delete messages associated with user's reported incidents
+    sqlx::query("DELETE FROM messages WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|e| {
+            println!("Delete messages by incident error: {}", e);
+            AppError::InternalServerError("Failed to delete related messages".to_string())
+        })?;
+
+    // 2. Delete messages sent by this user
+    sqlx::query("DELETE FROM messages WHERE sender_id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|e| {
+            println!("Delete user messages error: {}", e);
+            AppError::InternalServerError("Failed to delete user messages".to_string())
+        })?;
+
+    // 3. Delete incident reports associated with user's incidents
+    sqlx::query("DELETE FROM incident_reports WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|e| {
+            println!("Delete incident reports error: {}", e);
+            AppError::InternalServerError("Failed to delete related incident reports".to_string())
+        })?;
+
+    // 4. Delete incidents
     sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
         .bind(claims.sub)
         .execute(&state.db)
         .await
-        .map_err(|_| AppError::InternalServerError("Failed to delete user incidents".to_string()))?;
+        .map_err(|e| {
+            println!("Delete incidents error: {}", e);
+            AppError::InternalServerError("Failed to delete user incidents".to_string())
+        })?;
 
+    // 5. Delete OTP tokens
     sqlx::query("DELETE FROM otp_tokens WHERE email = $1")
         .bind(&user.email)
         .execute(&state.db)
         .await
-        .map_err(|_| AppError::InternalServerError("Failed to delete user OTP tokens".to_string()))?;
+        .map_err(|e| {
+            println!("Delete OTP tokens error: {}", e);
+            AppError::InternalServerError("Failed to delete user OTP tokens".to_string())
+        })?;
 
+    // 6. Delete user
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(claims.sub)
         .execute(&state.db)
         .await
-        .map_err(|_| AppError::InternalServerError("Failed to delete user account".to_string()))?;
+        .map_err(|e| {
+            println!("Delete user error: {}", e);
+            AppError::InternalServerError("Failed to delete user account".to_string())
+        })?;
 
     println!("🗑️ Permanently deleted account {} ({})", claims.sub, user.email);
 
