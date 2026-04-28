@@ -532,6 +532,9 @@ export const Dashboard = () => {
                 <>
                   <button
                     onClick={() => {
+                      if (user && user.id) {
+                        localStorage.setItem('previous_guest_id', user.id);
+                      }
                       setRegistrationPopupOpen(false);
                       window.location.href = '/login?register=1';
                     }}
@@ -540,7 +543,21 @@ export const Dashboard = () => {
                     Create an Account
                   </button>
                   <button
-                    onClick={() => setRegistrationPopupOpen(false)}
+                    onClick={async () => {
+                      if (token) {
+                        try {
+                          await fetch(`${import.meta.env.VITE_API_URL}/api/auth/cleanup-guest`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                        } catch (e) {
+                          console.error('Cleanup failed:', e);
+                        }
+                      }
+                      useStore.getState().logout();
+                      setRegistrationPopupOpen(false);
+                      window.location.href = '/';
+                    }}
                     className="btn-outline w-full !text-xs !text-stardust/60"
                   >
                     Maybe Later

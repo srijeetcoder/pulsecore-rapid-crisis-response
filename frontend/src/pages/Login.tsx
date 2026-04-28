@@ -31,20 +31,24 @@ export const Login = () => {
 
     if (step === 'otp') {
       try {
+        const previousGuestId = localStorage.getItem('previous_guest_id');
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, otp }),
+          body: JSON.stringify({ email, otp, guest_id: previousGuestId }),
         });
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Verification failed');
 
         setAuth(data.user, data.token);
+        localStorage.removeItem('previous_guest_id');
         if (location.state?.triggerSOS) {
           navigate('/dashboard', { state: { triggerSOS: true } });
-        } else {
+        } else if (data.user.role === 'guest') {
           navigate('/dashboard');
+        } else {
+          navigate('/settings');
         }
       } catch (err: any) {
         setError(err.message);
@@ -82,8 +86,10 @@ export const Login = () => {
         setAuth(data.user, data.token);
         if (location.state?.triggerSOS) {
           navigate('/dashboard', { state: { triggerSOS: true } });
-        } else {
+        } else if (data.user.role === 'guest') {
           navigate('/dashboard');
+        } else {
+          navigate('/settings');
         }
       }
     } catch (err: any) {

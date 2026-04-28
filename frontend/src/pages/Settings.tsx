@@ -42,7 +42,7 @@ export const Settings = () => {
           <h1 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-secondary uppercase tracking-tight">Account_Settings</h1>
         </div>
 
-        {(!user || user.role === 'guest') ? (
+        {(!user || (user.role === 'guest' && user.email?.endsWith('@pulsecore.local'))) ? (
           <div className="card-terminal text-center shadow-2xl relative z-10 py-20 px-8">
             <UserCircle className="w-20 h-20 text-accent-primary/50 mx-auto mb-6" />
             <h2 className="text-3xl font-heading font-bold text-white mb-4">Guest Session Active</h2>

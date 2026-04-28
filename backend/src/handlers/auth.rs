@@ -158,6 +158,7 @@ pub async fn register(
 pub struct VerifyOtpRequest {
     pub email: String,
     pub otp: String,
+    pub guest_id: Option<uuid::Uuid>,
 }
 
 pub async fn verify_otp(
@@ -205,10 +206,71 @@ pub async fn verify_otp(
     .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
     .ok_or(AppError::NotFound("User not found".to_string()))?;
 
+    // Transfer guest history if guest_id is provided
+    if let Some(guest_id) = payload.guest_id {
+        // 1. Update incidents to be owned by new user
+        sqlx::query("UPDATE incidents SET reporter_id = $1 WHERE reporter_id = $2")
+            .bind(user.id)
+            .bind(guest_id)
+            .execute(&state.db)
+            .await
+            .map_err(|e| {
+                println!("❌ Failed to transfer incidents: {}", e);
+                AppError::InternalServerError("Failed to transfer incidents".to_string())
+            })?;
+
+        // 2. Delete old guest account
+        sqlx::query("DELETE FROM users WHERE id = $1")
+            .bind(guest_id)
+            .execute(&state.db)
+            .await
+            .map_err(|e| {
+                println!("❌ Failed to delete guest account: {}", e);
+                AppError::InternalServerError("Failed to delete guest account".to_string())
+            })?;
+
+        println!("🔄 Transferred incidents from guest {} to user {}", guest_id, user.id);
+    }
+
     let token = create_jwt(user.id, &user.role)
         .map_err(|_| AppError::InternalServerError("Failed to create token".to_string()))?;
 
     Ok(Json(AuthResponse { token, user }))
+}
+
+pub async fn cleanup_guest(
+    State(state): State<AppState>,
+    claims: crate::utils::jwt::Claims,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Fetch user
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::NotFound("User not found".to_string()))?;
+
+    // Ensure it's a temporary guest
+    if user.role != "guest" || !user.email.ends_with("@pulsecore.local") {
+        return Err(AppError::Unauthorized("Only temporary guests can be cleaned up".to_string()));
+    }
+
+    // Delete incidents
+    sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete incidents".to_string()))?;
+
+    // Delete user
+    sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete guest account".to_string()))?;
+
+    println!("🧹 Cleaned up temporary guest account {}", claims.sub);
+
+    Ok(Json(serde_json::json!({ "status": "success", "message": "Guest account and data deleted" })))
 }
 
 #[derive(Deserialize)]
