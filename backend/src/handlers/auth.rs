@@ -273,6 +273,39 @@ pub async fn cleanup_guest(
     Ok(Json(serde_json::json!({ "status": "success", "message": "Guest account and data deleted" })))
 }
 
+pub async fn delete_account(
+    State(state): State<AppState>,
+    claims: crate::utils::jwt::Claims,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::NotFound("User not found".to_string()))?;
+
+    sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete user incidents".to_string()))?;
+
+    sqlx::query("DELETE FROM otp_tokens WHERE email = $1")
+        .bind(&user.email)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete user OTP tokens".to_string()))?;
+
+    sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .execute(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to delete user account".to_string()))?;
+
+    println!("🗑️ Permanently deleted account {} ({})", claims.sub, user.email);
+
+    Ok(Json(serde_json::json!({ "status": "success", "message": "Account permanently deleted" })))
+}
+
 #[derive(Deserialize)]
 pub struct LoginRequest {
     pub email: String,

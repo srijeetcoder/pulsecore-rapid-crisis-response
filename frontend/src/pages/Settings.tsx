@@ -1,13 +1,35 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/store';
-import { UserCircle, LogOut, Home } from 'lucide-react';
+import { UserCircle, LogOut, Home, ShieldAlert } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export const Settings = () => {
   const { user, setAuth } = useStore();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
+  const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
+  const { token } = useStore();
   const [success, setSuccess] = useState('');
+
+  const handleDeleteAccount = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        setAuth(null, null);
+        navigate('/');
+      } else {
+        console.error('Account deletion failed:', res.status);
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +160,48 @@ export const Settings = () => {
                     Logout
                   </button>
                 </div>
+
+                <div className="mt-12 pt-8 border-t border-accent-secondary/20 bg-accent-secondary/5 rounded-xl p-6">
+                  <h3 className="text-lg font-heading font-bold text-accent-secondary mb-2 uppercase tracking-widest">Danger Zone</h3>
+                  <p className="text-stardust/60 text-xs mb-6 leading-relaxed">
+                    Permanently delete your PulseCore account. This action cannot be undone, and all historical incident data, tokens, and credentials will be purged entirely.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteWarningOpen(true)}
+                    className="btn-danger !px-8 !py-3.5 !bg-accent-secondary/10 hover:!bg-accent-secondary !text-accent-secondary hover:!text-white border !border-accent-secondary/30 hover:!border-accent-secondary transition-all font-mono text-[10px] uppercase tracking-[0.2em]"
+                  >
+                    Delete Account Permanently
+                  </button>
+                </div>
               </form>
+            </div>
+          </div>
+        )}
+        {isDeleteWarningOpen && (
+          <div className="fixed inset-0 bg-void/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div className="card-alert max-w-md w-full border-accent-secondary/30 shadow-2xl shadow-accent-secondary/5 text-center p-8">
+              <div className="w-16 h-16 bg-accent-secondary/20 text-accent-secondary rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <ShieldAlert className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-heading font-bold text-accent-secondary mb-3 uppercase tracking-tight">Warning: Irreversible Purge</h2>
+              <p className="text-stardust/80 text-sm mb-8 leading-relaxed">
+                You are about to wipe your profile and all associated incident logs completely. Once committed, you will be forcibly logged out.
+              </p>
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={handleDeleteAccount}
+                  className="btn-primary !bg-accent-secondary hover:!bg-accent-secondary/80 w-full !py-4 uppercase tracking-widest text-xs font-mono shadow-lg shadow-accent-secondary/20"
+                >
+                  Confirm Deletion
+                </button>
+                <button
+                  onClick={() => setIsDeleteWarningOpen(false)}
+                  className="btn-outline w-full !py-4 uppercase tracking-widest text-xs font-mono !text-stardust/60"
+                >
+                  Abort Operation
+                </button>
+              </div>
             </div>
           </div>
         )}
