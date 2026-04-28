@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { useStore } from './store/store';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
@@ -15,6 +15,16 @@ import { TiltedGridBackground } from './components/TiltedGridBackground';
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = useStore((state) => state.token);
   return token ? children : <Navigate to="/login" />;
+}
+
+// SOS emergency flows bypass auth — Dashboard handles guestLogin + spinner internally.
+// All other unauthenticated dashboard access still redirects to /login.
+function DashboardRoute() {
+  const token = useStore((state) => state.token);
+  const [searchParams] = useSearchParams();
+  const isSOS = searchParams.get('sos') === '1';
+  if (!token && !isSOS) return <Navigate to="/login" />;
+  return <Dashboard />;
 }
 
 function GlobalWebSocket() {
@@ -49,14 +59,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/dashboard" element={<DashboardRoute />} />
         <Route
           path="/settings"
           element={

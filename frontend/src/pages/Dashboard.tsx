@@ -23,12 +23,14 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
 }
 
 export const Dashboard = () => {
-  const { incidents, user, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen } = useStore();
+  const { incidents, user, token, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen, guestLogin } = useStore();
   const [searchParams] = useSearchParams();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [location, setLocation] = useState('');
   const [panicMessage, setPanicMessage] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -43,6 +45,13 @@ export const Dashboard = () => {
       setIsSOSOpen(true);
     }
   }, [searchParams]);
+
+  // Auto-trigger guest login when arriving via the emergency button without a token
+  useEffect(() => {
+    if (searchParams.get('sos') === '1' && !token) {
+      guestLogin();
+    }
+  }, [searchParams, token, guestLogin]);
 
   const getLocation = () => {
     setIsLocating(true);
@@ -64,12 +73,50 @@ export const Dashboard = () => {
     }
   };
 
+  // Geocode a text address to lat/lng using OpenStreetMap Nominatim (free, no API key)
+  const geocodeLocation = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const encoded = encodeURIComponent(address);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en', 'User-Agent': 'PulseCore/1.0 (crisis-response)' } }
+      );
+      const data = await res.json();
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+    } catch (err) {
+      console.error('Geocoding failed:', err);
+    }
+    return null;
+  };
+
   const handleSOS = async (e: React.FormEvent) => {
     e.preventDefault();
-    await triggerSOS(location, panicMessage, lat, lng);
+    setGeocodeError('');
+
+    let finalLat = lat;
+    let finalLng = lng;
+
+    // If user typed a location but didn't use GPS auto-detect, geocode the text
+    if (location.trim() && (finalLat === null || finalLng === null)) {
+      setIsGeocoding(true);
+      const coords = await geocodeLocation(location);
+      setIsGeocoding(false);
+      if (coords) {
+        finalLat = coords.lat;
+        finalLng = coords.lng;
+      } else {
+        setGeocodeError('Could not find coordinates for that location. Try being more specific, or use the GPS button.');
+        // Still submit — location text alone is better than nothing
+      }
+    }
+
+    await triggerSOS(location, panicMessage, finalLat, finalLng);
     setIsSOSOpen(false);
     setLocation('');
     setPanicMessage('');
+    setGeocodeError('');
     setLat(null);
     setLng(null);
   };
@@ -92,6 +139,9 @@ export const Dashboard = () => {
 
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
+  // Pure anonymous guests are auto-generated with @pulsecore.local emails.
+  // Email-registered users who chose the 'guest' role should still see Settings.
+  const isPureGuest = isGuest && (user?.email?.endsWith('@pulsecore.local') ?? false);
 
   // Wait for the full profile sync (ensures we have user.id, etc.)
   if (!user || !user.id) {
@@ -136,7 +186,7 @@ export const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center space-x-6">
-            {isGuest && (
+            {isPureGuest && (
               <Link 
                 to="/login" 
                 className="btn-outline !px-6 !py-3 !text-[10px] font-mono uppercase tracking-[0.2em] border-accent-primary/30 text-accent-primary hover:bg-accent-primary/10"
@@ -144,7 +194,7 @@ export const Dashboard = () => {
                 Get Access
               </Link>
             )}
-            {!isGuest && (
+            {!isPureGuest && (
               <Link to="/settings" className="btn-outline !p-3 !bg-surface/50 group" title="Account Settings">
                 <SettingsIcon className="w-6 h-6 text-stardust group-hover:text-accent-primary transition-colors" />
               </Link>
@@ -397,8 +447,16 @@ export const Dashboard = () => {
                     <input
                       type="text"
                       value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Physical location or Lat/Lng..."
+                      onChange={(e) => {
+                        setLocation(e.target.value);
+                        // Clear GPS coords when user manually edits — will re-geocode on submit
+                        if (lat !== null || lng !== null) {
+                          setLat(null);
+                          setLng(null);
+                        }
+                        setGeocodeError('');
+                      }}
+                      placeholder="Type a place, city, or address..."
                       className="input-terminal flex-1"
                     />
                     <motion.button
@@ -406,21 +464,39 @@ export const Dashboard = () => {
                       type="button"
                       onClick={getLocation}
                       className="btn-outline !px-4 !py-0 !h-12 !rounded-xl"
-                      title="Fetch precision GPS"
+                      title="Auto-detect GPS location"
                     >
-                      <Navigation className={`w-5 h-5 ${isLocating ? 'animate-spin' : ''}`} />
+                      <Navigation className={`w-5 h-5 ${isLocating ? 'animate-spin text-accent-primary' : ''}`} />
                     </motion.button>
                   </div>
+                  {/* Show GPS-detected coords as confirmation */}
+                  {lat !== null && lng !== null && (
+                    <p className="mt-2 font-mono text-[10px] text-accent-primary/70 uppercase tracking-widest">
+                      📍 GPS: {lat.toFixed(5)}, {lng.toFixed(5)}
+                    </p>
+                  )}
+                  {/* Geocode status / error */}
+                  {isGeocoding && (
+                    <p className="mt-2 font-mono text-[10px] text-stardust animate-pulse uppercase tracking-widest">
+                      🌐 Resolving coordinates...
+                    </p>
+                  )}
+                  {geocodeError && (
+                    <p className="mt-2 font-mono text-[10px] text-accent-secondary uppercase tracking-widest">
+                      ⚠️ {geocodeError}
+                    </p>
+                  )}
                 </div>
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="btn-primary w-full !py-5 shadow-lg shadow-accent-primary/20 flex items-center justify-center"
+                  disabled={isGeocoding}
+                  className="btn-primary w-full !py-5 shadow-lg shadow-accent-primary/20 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Activity className="w-5 h-5 mr-2 animate-pulse" />
-                  Report Emergency
+                  <Activity className={`w-5 h-5 mr-2 ${isGeocoding ? 'animate-spin' : 'animate-pulse'}`} />
+                  {isGeocoding ? 'Resolving Location...' : 'Report Emergency'}
                 </motion.button>
               </form>
             </motion.div>

@@ -1,13 +1,34 @@
 use sqlx::{PgPool, postgres::PgPoolOptions};
-use std::env;
+use std::{env, time::Duration};
 
 pub async fn get_pool() -> PgPool {
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
 
-    PgPoolOptions::new()
-        .max_connections(1)
-        .connect(&database_url)
-        .await
-        .expect("Failed to connect to PostgreSQL")
+    // Retry up to 5 times with 2-second delays to handle Render cold-start delays
+    let mut attempts = 0u32;
+    loop {
+        attempts += 1;
+        match PgPoolOptions::new()
+            .max_connections(10)
+            .acquire_timeout(Duration::from_secs(15))
+            .connect(&database_url)
+            .await
+        {
+            Ok(pool) => {
+                println!("✅ PostgreSQL connected (attempt {})", attempts);
+                return pool;
+            }
+            Err(e) => {
+                if attempts >= 5 {
+                    panic!("Failed to connect to PostgreSQL after {} attempts: {}", attempts, e);
+                }
+                println!(
+                    "⚠️  DB connection attempt {} failed: {}. Retrying in 2s...",
+                    attempts, e
+                );
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        }
+    }
 }

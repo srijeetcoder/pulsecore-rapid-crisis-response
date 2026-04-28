@@ -15,9 +15,7 @@ export const Landing = () => {
   const navigate = useNavigate();
   const token = useStore((state) => state.token);
   const user = useStore((state) => state.user);
-  const guestLogin = useStore((state) => state.guestLogin);
   const logout = useStore((state) => state.logout);
-  const isGuestLoading = useStore((state) => state.isGuestLoading);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -66,11 +64,10 @@ export const Landing = () => {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % newsItems.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + newsItems.length) % newsItems.length);
 
-  const handleEmergency = async () => {
-    // If no token or no user profile, perform a guest login first
-    if (!token || !user) {
-      await guestLogin();
-    }
+  const handleEmergency = () => {
+    // Navigate to dashboard immediately — no await, so the user sees the
+    // dashboard transition right away instead of waiting for the cold-start API.
+    // The Dashboard page will auto-trigger guestLogin when ?sos=1 is detected.
     navigate('/dashboard?sos=1');
   };
 
@@ -161,20 +158,10 @@ export const Landing = () => {
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-6 sm:space-y-0 sm:space-x-8">
               <button
                 onClick={handleEmergency}
-                disabled={isGuestLoading}
-                className="btn-danger !px-12 !py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center disabled:opacity-50 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
+                className="btn-danger !px-12 !py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
               >
-                {isGuestLoading ? (
-                  <>
-                    <Navigation className="mr-3 h-6 w-6 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Activity className="mr-3 h-6 w-6 animate-pulse" />
-                    Report Emergency
-                  </>
-                )}
+                <Activity className="mr-3 h-6 w-6 animate-pulse" />
+                Report Emergency
               </button>
               <Link
                 to={token ? "/dashboard" : "/login"}
