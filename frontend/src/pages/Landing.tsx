@@ -112,7 +112,7 @@ export const Landing = () => {
                 </>
               ) : (
                 <>
-                  {user?.role && user.role !== 'guest' ? (
+                  {user ? (
                     <button
                       onClick={() => logout()}
                       className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors"
