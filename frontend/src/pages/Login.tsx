@@ -16,7 +16,42 @@ export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  
+  const [resendTimer, setResendTimer] = useState(60);
+  const [isResendDisabled, setIsResendDisabled] = useState(true);
+
+  React.useEffect(() => {
+    let timer: any;
+    if (step === 'otp' && resendTimer > 0) {
+      timer = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (resendTimer === 0) {
+      setIsResendDisabled(false);
+    }
+    return () => clearInterval(timer);
+  }, [step, resendTimer]);
+
+  const handleResendOtp = async () => {
+    setError('');
+    setSuccessMsg('');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Resend failed');
+
+      setSuccessMsg('A new OTP has been generated! Check your terminal.');
+      setResendTimer(60);
+      setIsResendDisabled(true);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   const setAuth = useStore((state) => state.setAuth);
   const navigate = useNavigate();
 
@@ -213,6 +248,23 @@ export const Login = () => {
               {step === 'otp' ? 'VERIFY_CODE' : (step === 'register' ? 'CREATE_ACCOUNT' : 'SIGN_IN')}
             </button>
           </div>
+          
+          {step === 'otp' && (
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                disabled={isResendDisabled}
+                onClick={handleResendOtp}
+                className={`font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                  isResendDisabled 
+                    ? 'text-stardust/40 cursor-not-allowed' 
+                    : 'text-accent-primary hover:text-accent-secondary'
+                }`}
+              >
+                {isResendDisabled ? `RESEND_OTP_IN_${resendTimer}S` : 'RESEND_OTP'}
+              </button>
+            </div>
+          )}
         </form>
 
         {step !== 'otp' && (

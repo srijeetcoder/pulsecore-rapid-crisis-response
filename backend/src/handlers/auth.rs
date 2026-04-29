@@ -102,24 +102,7 @@ pub async fn register(
     println!("🔐 OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    let to_addr = payload.email.clone();
-    let otp_clone = otp.clone();
 
-    tokio::spawn(async move {
-        let email_body = format!(
-            r#"
-            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                <p style="color:#94a3b8;">Your email verification code is:</p>
-                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
-            </div>
-            "#,
-            otp_clone
-        );
-
-        crate::utils::email::send_email_via_http(&to_addr, "Your OTP Verification Code - PulseCore", &email_body).await;
-    });
 
     Ok(Json(RegisterResponse {
         message: "OTP generated. Check your email inbox (and terminal as backup).".to_string(),
@@ -469,24 +452,7 @@ pub async fn forgot_password(
     println!("🔐 Password Reset OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    let to_addr = payload.email.clone();
-    let otp_clone = otp.clone();
 
-    tokio::spawn(async move {
-        let email_body = format!(
-            r#"
-            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                <p style="color:#94a3b8;">Your password reset verification code is:</p>
-                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>
-            </div>
-            "#,
-            otp_clone
-        );
-
-        crate::utils::email::send_email_via_http(&to_addr, "Password Reset OTP - PulseCore", &email_body).await;
-    });
 
     Ok(Json(RegisterResponse {
         message: "Password reset OTP sent. Check your email.".to_string(),
@@ -526,24 +492,7 @@ pub async fn resend_otp(
     println!("🔐 Resent OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    let to_addr = payload.email.clone();
-    let otp_clone = otp.clone();
 
-    tokio::spawn(async move {
-        let email_body = format!(
-            r#"
-            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                <p style="color:#94a3b8;">Your new email verification code is:</p>
-                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
-            </div>
-            "#,
-            otp_clone
-        );
-
-        crate::utils::email::send_email_via_http(&to_addr, "Your New OTP Verification Code - PulseCore", &email_body).await;
-    });
 
     Ok(Json(RegisterResponse {
         message: "OTP resent successfully. Check your email inbox.".to_string(),
