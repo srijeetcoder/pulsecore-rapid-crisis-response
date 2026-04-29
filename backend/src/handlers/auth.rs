@@ -4,11 +4,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{Utc, Duration};
 use rand::Rng;
-use std::env;
 
-use lettre::{Message, AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::message::header::ContentType;
+// lettre SMTP imports removed
 
 use crate::{
     models::User,
@@ -100,57 +97,29 @@ pub async fn register(
     .await
     .map_err(|_| AppError::InternalServerError("Failed to generate OTP".to_string()))?;
 
-    // Attempt to send email via async SMTP (Gmail)
-    let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default().replace(" ", "");
-
     // Always print to terminal first as a fallback
     println!("\n=========================================");
     println!("🔐 OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    if !smtp_username.is_empty() && !smtp_password.is_empty() {
-        let from_addr = smtp_username.clone();
-        let to_addr = payload.email.clone();
-        let otp_clone = otp.clone();
-        let user_clone = smtp_username.clone();
-        let pass_clone = smtp_password.clone();
+    let to_addr = payload.email.clone();
+    let otp_clone = otp.clone();
 
-        tokio::spawn(async move {
-            let email_result = Message::builder()
-                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
-                .to(to_addr.parse().unwrap())
-                .subject("Your OTP Verification Code - PulseCore")
-                .header(ContentType::TEXT_HTML)
-                .body(format!(
-                    r#"
-                    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                        <p style="color:#94a3b8;">Your email verification code is:</p>
-                        <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                        <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
-                    </div>
-                    "#,
-                    otp_clone
-                ))
-                .unwrap();
+    tokio::spawn(async move {
+        let email_body = format!(
+            r#"
+            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
+                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
+                <p style="color:#94a3b8;">Your email verification code is:</p>
+                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
+                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
+            </div>
+            "#,
+            otp_clone
+        );
 
-            let creds = Credentials::new(user_clone, pass_clone);
-
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
-                Ok(builder) => {
-                    let mailer = builder.credentials(creds).build();
-                    match mailer.send(email_result).await {
-                        Ok(_) => println!("✅ Email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send email: {}", e),
-                    }
-                }
-                Err(e) => println!("❌ SMTP relay error: {}", e),
-            }
-        });
-    } else {
-        println!("⚠️  SMTP_USERNAME or SMTP_PASSWORD not set in .env — skipping email send.");
-    }
+        crate::utils::email::send_email_via_http(&to_addr, "Your OTP Verification Code - PulseCore", &email_body).await;
+    });
 
     Ok(Json(RegisterResponse {
         message: "OTP generated. Check your email inbox (and terminal as backup).".to_string(),
@@ -496,57 +465,88 @@ pub async fn forgot_password(
     .await
     .map_err(|_| AppError::InternalServerError("Failed to generate OTP".to_string()))?;
 
-    // Send email (reusing the logic from register)
-    let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default().replace(" ", "");
-
     println!("\n=========================================");
     println!("🔐 Password Reset OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    if !smtp_username.is_empty() && !smtp_password.is_empty() {
-        let from_addr = smtp_username.clone();
-        let to_addr = payload.email.clone();
-        let otp_clone = otp.clone();
-        let user_clone = smtp_username.clone();
-        let pass_clone = smtp_password.clone();
+    let to_addr = payload.email.clone();
+    let otp_clone = otp.clone();
 
-        tokio::spawn(async move {
-            let email_result = Message::builder()
-                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
-                .to(to_addr.parse().unwrap())
-                .subject("Password Reset OTP - PulseCore")
-                .header(ContentType::TEXT_HTML)
-                .body(format!(
-                    r#"
-                    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                        <p style="color:#94a3b8;">Your password reset verification code is:</p>
-                        <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                        <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>
-                    </div>
-                    "#,
-                    otp_clone
-                ))
-                .unwrap();
+    tokio::spawn(async move {
+        let email_body = format!(
+            r#"
+            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
+                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
+                <p style="color:#94a3b8;">Your password reset verification code is:</p>
+                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
+                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>
+            </div>
+            "#,
+            otp_clone
+        );
 
-            let creds = Credentials::new(user_clone, pass_clone);
-
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
-                Ok(builder) => {
-                    let mailer = builder.credentials(creds).build();
-                    match mailer.send(email_result).await {
-                        Ok(_) => println!("✅ Reset email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send reset email: {}", e),
-                    }
-                }
-                Err(e) => println!("❌ SMTP relay error: {}", e),
-            }
-        });
-    }
+        crate::utils::email::send_email_via_http(&to_addr, "Password Reset OTP - PulseCore", &email_body).await;
+    });
 
     Ok(Json(RegisterResponse {
         message: "Password reset OTP sent. Check your email.".to_string(),
+        email: payload.email,
+    }))
+}
+
+pub async fn resend_otp(
+    State(state): State<AppState>,
+    Json(payload): Json<ForgotPasswordRequest>,
+) -> Result<Json<RegisterResponse>, AppError> {
+    // Check if user exists
+    let _user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+        .bind(&payload.email)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
+        .ok_or(AppError::NotFound("User not found".to_string()))?;
+
+    // Generate 6-digit OTP
+    let otp: String = (0..6).map(|_| rand::thread_rng().gen_range(0..10).to_string()).collect();
+    let otp_id = Uuid::new_v4();
+
+    sqlx::query(
+        "INSERT INTO otp_tokens (id, email, otp, expires_at, used) VALUES ($1, $2, $3, $4, FALSE)"
+    )
+    .bind(otp_id)
+    .bind(&payload.email)
+    .bind(&otp)
+    .bind(Utc::now() + Duration::minutes(15))
+    .execute(&state.db)
+    .await
+    .map_err(|_| AppError::InternalServerError("Failed to generate OTP".to_string()))?;
+
+    // Always print to terminal first as a fallback
+    println!("\n=========================================");
+    println!("🔐 Resent OTP For {}: {}", payload.email, otp);
+    println!("=========================================\n");
+
+    let to_addr = payload.email.clone();
+    let otp_clone = otp.clone();
+
+    tokio::spawn(async move {
+        let email_body = format!(
+            r#"
+            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
+                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
+                <p style="color:#94a3b8;">Your new email verification code is:</p>
+                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
+                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
+            </div>
+            "#,
+            otp_clone
+        );
+
+        crate::utils::email::send_email_via_http(&to_addr, "Your New OTP Verification Code - PulseCore", &email_body).await;
+    });
+
+    Ok(Json(RegisterResponse {
+        message: "OTP resent successfully. Check your email inbox.".to_string(),
         email: payload.email,
     }))
 }
