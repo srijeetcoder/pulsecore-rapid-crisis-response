@@ -6,8 +6,13 @@ use axum::{
 use crate::AppState;
 use crate::handlers::{auth, incidents, ws, ai};
 
+async fn health_check() -> &'static str {
+    "OK"
+}
+
 pub fn app_router(state: AppState) -> Router {
     Router::new()
+        .route("/health", get(health_check))
         .route("/api/auth/register", post(auth::register))
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/verify-otp", post(auth::verify_otp))
@@ -25,4 +30,4 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/ai/chat", post(ai::ai_chat))
         .route("/api/ws", get(ws::ws_handler))
         .with_state(state)
-}
+}
