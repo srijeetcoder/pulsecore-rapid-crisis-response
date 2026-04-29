@@ -17,7 +17,7 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/verify-otp", post(auth::verify_otp))
         .route("/api/auth/forgot-password", post(auth::forgot_password))
-        .route("/api/auth/resend-otp", post(auth::resend_otp))
+
         .route("/api/auth/reset-password", post(auth::reset_password))
         .route("/api/auth/guest", post(auth::guest_login))
         .route("/api/auth/cleanup-guest", post(auth::cleanup_guest))
