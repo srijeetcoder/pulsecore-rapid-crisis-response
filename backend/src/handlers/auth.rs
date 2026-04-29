@@ -56,8 +56,13 @@ pub async fn register(
     Json(payload): Json<RegisterRequest>,
 ) -> Result<Json<RegisterResponse>, AppError> {
     // Use cost 4 in dev to prevent massive delays in debug mode
-    let password_hash = hash(&payload.password, 4)
-        .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
+    let password = payload.password.clone();
+    let password_hash = tokio::task::spawn_blocking(move || {
+        hash(&password, 4)
+    })
+    .await
+    .map_err(|_| AppError::InternalServerError("Internal thread error".to_string()))?
+    .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     let id = Uuid::new_v4();
 
@@ -173,12 +178,14 @@ pub async fn verify_otp(
 
     println!("🔍 Verifying OTP for email='{}' otp='{}'", payload.email, payload.otp);
 
+    let mut tx = state.db.begin().await.map_err(|_| AppError::InternalServerError("Failed to begin transaction".to_string()))?;
+
     let record = sqlx::query_as::<_, OtpRecord>(
         "SELECT id FROM otp_tokens WHERE email = $1 AND otp = $2 AND used = FALSE AND expires_at > NOW()"
     )
     .bind(&payload.email)
     .bind(&payload.otp)
-    .fetch_optional(&state.db)
+    .fetch_optional(&mut *tx)
     .await
     .map_err(|e| {
         println!("❌ DB error in verify_otp: {}", e);
@@ -192,7 +199,7 @@ pub async fn verify_otp(
     // Mark as used
     sqlx::query("UPDATE otp_tokens SET used = TRUE WHERE id = $1")
         .bind(&record.id)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .unwrap();
 
@@ -201,7 +208,7 @@ pub async fn verify_otp(
         "UPDATE users SET is_verified = TRUE WHERE email = $1 RETURNING *"
     )
     .bind(&payload.email)
-    .fetch_optional(&state.db)
+    .fetch_optional(&mut *tx)
     .await
     .map_err(|_| AppError::InternalServerError("Database error".to_string()))?
     .ok_or(AppError::NotFound("User not found".to_string()))?;
@@ -212,7 +219,7 @@ pub async fn verify_otp(
         sqlx::query("UPDATE incidents SET reporter_id = $1 WHERE reporter_id = $2")
             .bind(user.id)
             .bind(guest_id)
-            .execute(&state.db)
+            .execute(&mut *tx)
             .await
             .map_err(|e| {
                 println!("❌ Failed to transfer incidents: {}", e);
@@ -222,7 +229,7 @@ pub async fn verify_otp(
         // 2. Delete old guest account
         sqlx::query("DELETE FROM users WHERE id = $1")
             .bind(guest_id)
-            .execute(&state.db)
+            .execute(&mut *tx)
             .await
             .map_err(|e| {
                 println!("❌ Failed to delete guest account: {}", e);
@@ -231,6 +238,8 @@ pub async fn verify_otp(
 
         println!("🔄 Transferred incidents from guest {} to user {}", guest_id, user.id);
     }
+
+    tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
 
     let token = create_jwt(user.id, &user.role)
         .map_err(|_| AppError::InternalServerError("Failed to create token".to_string()))?;
@@ -242,10 +251,12 @@ pub async fn cleanup_guest(
     State(state): State<AppState>,
     claims: crate::utils::jwt::Claims,
 ) -> Result<Json<serde_json::Value>, AppError> {
+    let mut tx = state.db.begin().await.map_err(|_| AppError::InternalServerError("Failed to begin transaction".to_string()))?;
+
     // Fetch user
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
         .bind(claims.sub)
-        .fetch_one(&state.db)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|_| AppError::NotFound("User not found".to_string()))?;
 
@@ -257,37 +268,39 @@ pub async fn cleanup_guest(
     // 1. Delete messages associated with guest incidents
     sqlx::query("DELETE FROM messages WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete related messages".to_string()))?;
 
     // 2. Delete messages sent by guest
     sqlx::query("DELETE FROM messages WHERE sender_id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete guest messages".to_string()))?;
 
     // 3. Delete incident reports associated with guest incidents
     sqlx::query("DELETE FROM incident_reports WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete related incident reports".to_string()))?;
 
     // 4. Delete incidents
     sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete incidents".to_string()))?;
 
     // 5. Delete user
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete guest account".to_string()))?;
+
+    tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
 
     println!("🧹 Cleaned up temporary guest account {}", claims.sub);
 
@@ -298,16 +311,18 @@ pub async fn delete_account(
     State(state): State<AppState>,
     claims: crate::utils::jwt::Claims,
 ) -> Result<Json<serde_json::Value>, AppError> {
+    let mut tx = state.db.begin().await.map_err(|_| AppError::InternalServerError("Failed to begin transaction".to_string()))?;
+
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
         .bind(claims.sub)
-        .fetch_one(&state.db)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|_| AppError::NotFound("User not found".to_string()))?;
 
     // 1. Delete messages associated with user's reported incidents
     sqlx::query("DELETE FROM messages WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete messages by incident error: {}", e);
@@ -317,7 +332,7 @@ pub async fn delete_account(
     // 2. Delete messages sent by this user
     sqlx::query("DELETE FROM messages WHERE sender_id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete user messages error: {}", e);
@@ -327,7 +342,7 @@ pub async fn delete_account(
     // 3. Delete incident reports associated with user's incidents
     sqlx::query("DELETE FROM incident_reports WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete incident reports error: {}", e);
@@ -337,7 +352,7 @@ pub async fn delete_account(
     // 4. Delete incidents
     sqlx::query("DELETE FROM incidents WHERE reporter_id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete incidents error: {}", e);
@@ -347,7 +362,7 @@ pub async fn delete_account(
     // 5. Delete OTP tokens
     sqlx::query("DELETE FROM otp_tokens WHERE email = $1")
         .bind(&user.email)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete OTP tokens error: {}", e);
@@ -357,12 +372,14 @@ pub async fn delete_account(
     // 6. Delete user
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(claims.sub)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Delete user error: {}", e);
             AppError::InternalServerError("Failed to delete user account".to_string())
         })?;
+
+    tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
 
     println!("🗑️ Permanently deleted account {} ({})", claims.sub, user.email);
 
@@ -390,8 +407,14 @@ pub async fn login(
         return Err(AppError::Unauthorized("Please verify your email first".to_string()));
     }
 
-    let is_valid = verify(&payload.password, &user.password_hash)
-        .map_err(|_| AppError::InternalServerError("Failed to verify password".to_string()))?;
+    let password = payload.password.clone();
+    let hash_to_verify = user.password_hash.clone();
+    let is_valid = tokio::task::spawn_blocking(move || {
+        verify(&password, &hash_to_verify)
+    })
+    .await
+    .map_err(|_| AppError::InternalServerError("Internal thread error".to_string()))?
+    .map_err(|_| AppError::InternalServerError("Failed to verify password".to_string()))?;
 
     if !is_valid {
         return Err(AppError::Unauthorized("Invalid credentials".to_string()));
@@ -417,8 +440,12 @@ pub async fn guest_login(
     let guest_name = format!("Guest-{}", short_id);
     let guest_email = format!("guest-{}@pulsecore.local", short_id);
     // A random unusable password hash — guests can never log in conventionally
-    let password_hash = hash("__guest_no_password__", 4)
-        .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
+    let password_hash = tokio::task::spawn_blocking(move || {
+        hash("__guest_no_password__", 4)
+    })
+    .await
+    .map_err(|_| AppError::InternalServerError("Internal thread error".to_string()))?
+    .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     let user = sqlx::query_as::<_, User>(
         "INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES ($1, $2, $3, $4, 'guest', TRUE) RETURNING *"
@@ -547,8 +574,13 @@ pub async fn reset_password(
         .unwrap();
 
     // Hash new password
-    let password_hash = hash(&payload.new_password, 4)
-        .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
+    let new_password = payload.new_password.clone();
+    let password_hash = tokio::task::spawn_blocking(move || {
+        hash(&new_password, 4)
+    })
+    .await
+    .map_err(|_| AppError::InternalServerError("Internal thread error".to_string()))?
+    .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     // Update password
     sqlx::query("UPDATE users SET password_hash = $1 WHERE email = $2")

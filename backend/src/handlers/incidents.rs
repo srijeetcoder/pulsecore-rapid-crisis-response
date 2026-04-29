@@ -170,9 +170,11 @@ pub async fn delete_incident(
     #[derive(sqlx::FromRow)]
     struct StatusCheck { status: String }
 
+    let mut tx = state.db.begin().await.map_err(|_| AppError::InternalServerError("Failed to begin transaction".to_string()))?;
+
     let check = sqlx::query_as::<_, StatusCheck>("SELECT status FROM incidents WHERE id = $1")
         .bind(id)
-        .fetch_optional(&state.db)
+        .fetch_optional(&mut *tx)
         .await
         .map_err(|e| {
             println!("Check error: {}", e);
@@ -187,7 +189,7 @@ pub async fn delete_incident(
     // Delete related records first to satisfy foreign key constraints
     sqlx::query("DELETE FROM messages WHERE incident_id = $1")
         .bind(id)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Failed to delete messages: {}", e);
@@ -196,18 +198,20 @@ pub async fn delete_incident(
 
     sqlx::query("DELETE FROM incident_reports WHERE incident_id = $1")
         .bind(id)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|_| AppError::InternalServerError("Failed to delete incident reports".to_string()))?;
 
     sqlx::query("DELETE FROM incidents WHERE id = $1")
         .bind(id)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             println!("Failed to delete incident: {}", e);
             AppError::InternalServerError("Failed to delete incident".to_string())
         })?;
+
+    tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
 
     let msg = serde_json::json!({
         "type": "DELETE_INCIDENT",

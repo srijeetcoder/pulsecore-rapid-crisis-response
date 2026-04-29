@@ -10,8 +10,11 @@ pub async fn get_pool() -> PgPool {
     loop {
         attempts += 1;
         match PgPoolOptions::new()
-            .max_connections(10)
+            .max_connections(50)
+            .min_connections(5)
             .acquire_timeout(Duration::from_secs(15))
+            .idle_timeout(Duration::from_secs(30))
+            .max_lifetime(Duration::from_secs(1800))
             .connect(&database_url)
             .await
         {
