@@ -26,15 +26,19 @@ async fn main() {
     dotenv().ok();
 
     // Check for HTTP Email API keys
-    let resend_key = env::var("RESEND_API_KEY").is_ok();
-    let sendgrid_key = env::var("SENDGRID_API_KEY").is_ok();
-    let brevo_key = env::var("BREVO_API_KEY").is_ok();
+    let r_key = env::var("RESEND_API_KEY").is_ok();
+    let s_key = env::var("SENDGRID_API_KEY").is_ok();
+    let b_key = env::var("BREVO_API_KEY").is_ok();
 
-    if resend_key || sendgrid_key || brevo_key {
-        println!("✅ HTTP Email API Key detected. Ready to send emails on Render.");
+    if r_key || s_key || b_key {
+        let provider = if r_key { "Resend" } else if b_key { "Brevo" } else { "SendGrid" };
+        println!("✅ HTTP Email API Key detected ({})", provider);
     } else {
-        println!("⚠️  NO HTTP EMAIL API KEY DETECTED.");
-        println!("   Email delivery will fail on Render. Please set RESEND_API_KEY.");
+        println!("\n=========================================");
+        println!("⚠️  NO EMAIL API KEYS DETECTED.");
+        println!("Checked for: RESEND_API_KEY, BREVO_API_KEY, SENDGRID_API_KEY");
+        println!("Please add one to your Render Environment Variables.");
+        println!("=========================================\n");
     }
     
     tracing_subscriber::registry()
