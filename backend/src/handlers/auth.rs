@@ -138,15 +138,18 @@ pub async fn register(
 
             let creds = Credentials::new(user_clone, pass_clone);
 
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
+            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.googlemail.com") {
                 Ok(builder) => {
                     let mailer = builder.port(587).credentials(creds).build();
                     match mailer.send(email_result).await {
                         Ok(_) => println!("✅ Email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send email (port 587): {}", e),
+                        Err(e) => {
+                            println!("❌ Failed to send email to {}: {}", to_addr, e);
+                            println!("   Check if SMTP_USERNAME ({}) is correct and App Password is valid.", from_addr);
+                        }
                     }
                 }
-                Err(e) => println!("❌ SMTP relay error: {}", e),
+                Err(e) => println!("❌ SMTP relay error (googlemail): {}", e),
             }
         });
     } else {
@@ -536,15 +539,18 @@ pub async fn forgot_password(
 
             let creds = Credentials::new(user_clone, pass_clone);
 
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
+            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.googlemail.com") {
                 Ok(builder) => {
                     let mailer = builder.port(587).credentials(creds).build();
                     match mailer.send(email_result).await {
                         Ok(_) => println!("✅ Reset email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send reset email (port 587): {}", e),
+                        Err(e) => {
+                            println!("❌ Failed to send reset email to {}: {}", to_addr, e);
+                            println!("   Check if SMTP_USERNAME ({}) is correct and App Password is valid.", from_addr);
+                        }
                     }
                 }
-                Err(e) => println!("❌ SMTP relay error: {}", e),
+                Err(e) => println!("❌ SMTP relay error (googlemail reset): {}", e),
             }
         });
     }
