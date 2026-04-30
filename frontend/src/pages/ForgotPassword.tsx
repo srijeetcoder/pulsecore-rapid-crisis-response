@@ -132,6 +132,12 @@ export const ForgotPassword = () => {
           >
             {loading ? 'SYNCING...' : (step === 'request' ? 'REQUEST_RESET_KEY' : 'UPDATE_PASSPHRASE')}
           </button>
+          
+          {step === 'request' && (
+            <p className="font-mono text-[9px] text-stardust/60 text-center uppercase tracking-widest leading-relaxed">
+              * If you don't receive an email within 2 minutes, please check your <span className="text-accent-secondary">SPAM</span> or <span className="text-accent-secondary">JUNK</span> folder.
+            </p>
+          )}
         </form>
 
         <div className="text-center">

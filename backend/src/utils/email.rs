@@ -6,6 +6,7 @@ pub async fn send_email_via_http(to_email: &str, subject: &str, body: &str) {
     let resend_key = env::var("RESEND_API_KEY").unwrap_or_default();
     let sendgrid_key = env::var("SENDGRID_API_KEY").unwrap_or_default();
     let brevo_key = env::var("BREVO_API_KEY").unwrap_or_default();
+    let sender_email = env::var("SENDER_EMAIL").unwrap_or_else(|_| "onboarding@resend.dev".to_string());
 
     let client = Client::new();
 
@@ -13,7 +14,7 @@ pub async fn send_email_via_http(to_email: &str, subject: &str, body: &str) {
         println!("📧 Attempting to send email via Resend HTTP API to {}", to_email);
         let url = "https://api.resend.com/emails";
         let payload = json!({
-            "from": "PulseCore <onboarding@resend.dev>",
+            "from": format!("PulseCore <{}>", sender_email),
             "to": [to_email],
             "subject": subject,
             "html": body
@@ -34,7 +35,7 @@ pub async fn send_email_via_http(to_email: &str, subject: &str, body: &str) {
         let url = "https://api.sendgrid.com/v3/mail/send";
         let payload = json!({
             "personalizations": [{"to": [{"email": to_email}]}],
-            "from": {"email": "onboarding@resend.dev"},
+            "from": {"email": sender_email},
             "subject": subject,
             "content": [{"type": "text/html", "value": body}]
         });
@@ -53,7 +54,7 @@ pub async fn send_email_via_http(to_email: &str, subject: &str, body: &str) {
         println!("📧 Attempting to send email via Brevo HTTP API to {}", to_email);
         let url = "https://api.brevo.com/v3/smtp/email";
         let payload = json!({
-            "sender": {"name": "PulseCore", "email": "onboarding@resend.dev"},
+            "sender": {"name": "PulseCore", "email": sender_email},
             "to": [{"email": to_email}],
             "subject": subject,
             "htmlContent": body

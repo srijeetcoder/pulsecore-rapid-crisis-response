@@ -25,40 +25,17 @@ async fn main() {
     // Load .env explicitly from the backend directory (handles running from any CWD)
     dotenv().ok();
 
-    // Print SMTP config status on startup
-    let smtp_user = env::var("SMTP_USERNAME").unwrap_or_else(|_| "(not set)".to_string());
-    println!("📧 SMTP_USERNAME = {}", smtp_user);
-    println!("🔑 SMTP_PASSWORD = {}", if env::var("SMTP_PASSWORD").is_ok() { "(set)" } else { "(not set)" });
-    
-    // --- SMTP Diagnostic Check ---
-    tokio::spawn(async move {
-        println!("🔍 Running SMTP connectivity diagnostic...");
-        let target = "smtp.googlemail.com";
-        let port = 587;
-        
-        // 1. DNS Resolution
-        match tokio::net::lookup_host(format!("{}:{}", target, port)).await {
-            Ok(addrs) => {
-                let addrs_list: Vec<_> = addrs.collect();
-                println!("✅ DNS resolved {} to: {:?}", target, addrs_list);
-                
-                // 2. TCP Connectivity Test
-                for addr in addrs_list {
-                    print!("⏳ Testing TCP connection to {}... ", addr);
-                    match tokio::time::timeout(
-                        std::time::Duration::from_secs(5),
-                        tokio::net::TcpStream::connect(addr)
-                    ).await {
-                        Ok(Ok(_)) => println!("CONNECTED!"),
-                        Ok(Err(e)) => println!("FAILED: {}", e),
-                        Err(_) => println!("TIMEOUT"),
-                    }
-                }
-            }
-            Err(e) => println!("❌ DNS resolution failed for {}: {}", target, e),
-        }
-        println!("🏁 SMTP diagnostic complete.\n");
-    });
+    // Check for HTTP Email API keys
+    let resend_key = env::var("RESEND_API_KEY").is_ok();
+    let sendgrid_key = env::var("SENDGRID_API_KEY").is_ok();
+    let brevo_key = env::var("BREVO_API_KEY").is_ok();
+
+    if resend_key || sendgrid_key || brevo_key {
+        println!("✅ HTTP Email API Key detected. Ready to send emails on Render.");
+    } else {
+        println!("⚠️  NO HTTP EMAIL API KEY DETECTED.");
+        println!("   Email delivery will fail on Render. Please set RESEND_API_KEY.");
+    }
     
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
