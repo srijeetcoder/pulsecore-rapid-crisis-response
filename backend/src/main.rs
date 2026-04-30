@@ -67,6 +67,10 @@ async fn main() {
     let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact TEXT")
         .execute(&pool).await;
 
+    // Chat fields
+    let _ = sqlx::query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS sender_name TEXT")
+        .execute(&pool).await;
+
     // Run migrations
     //sqlx::migrate!("./migrations")
     //  .run(&pool)

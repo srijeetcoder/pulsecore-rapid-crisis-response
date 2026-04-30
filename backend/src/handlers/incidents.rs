@@ -19,6 +19,7 @@ pub struct CreateIncidentRequest {
     pub panic_message: String,
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
+    pub guest_name: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -53,6 +54,17 @@ pub async fn create_incident(
     claims: Claims,
     Json(payload): Json<CreateIncidentRequest>,
 ) -> Result<Json<Incident>, AppError> {
+    // If it's a guest and they provided a name, update their user record
+    if claims.role == "guest" {
+        if let Some(name) = &payload.guest_name {
+            let _ = sqlx::query("UPDATE users SET name = $1 WHERE id = $2")
+                .bind(name)
+                .bind(claims.sub)
+                .execute(&state.db)
+                .await;
+        }
+    }
+
     let id = Uuid::new_v4();
 
     // Create the incident immediately with a placeholder for AI advice
@@ -325,13 +337,20 @@ pub async fn send_message(
         }
     }
 
+    let sender_name = sqlx::query_scalar::<_, String>("SELECT name FROM users WHERE id = $1")
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Failed to fetch sender name".to_string()))?;
+
     let message_id = Uuid::new_v4();
     let message = sqlx::query_as::<_, crate::models::Message>(
-        "INSERT INTO messages (id, incident_id, sender_id, content) VALUES ($1, $2, $3, $4) RETURNING *"
+        "INSERT INTO messages (id, incident_id, sender_id, sender_name, content) VALUES ($1, $2, $3, $4, $5) RETURNING *"
     )
     .bind(message_id)
     .bind(id)
     .bind(claims.sub)
+    .bind(sender_name)
     .bind(&payload.content)
     .fetch_one(&state.db)
     .await

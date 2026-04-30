@@ -43,6 +43,7 @@ pub struct Message {
     pub id: Uuid,
     pub incident_id: Uuid,
     pub sender_id: Uuid,
+    pub sender_name: String, // Added field
     pub content: String,
     pub timestamp: DateTime<Utc>,
 }

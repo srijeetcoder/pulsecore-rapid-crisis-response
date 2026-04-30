@@ -133,8 +133,11 @@ export const LiveChatWidget: React.FC = () => {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
                   >
+                    <span className="font-mono text-[8px] text-stardust/40 uppercase mb-1 tracking-widest px-1">
+                      {isOwn ? 'YOU' : msg.sender_name.toUpperCase()}
+                    </span>
                     <div
                       className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${isOwn
                         ? 'bg-accent-secondary text-white rounded-br-sm shadow-lg shadow-accent-secondary/10'

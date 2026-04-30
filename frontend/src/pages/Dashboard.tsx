@@ -29,6 +29,7 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [location, setLocation] = useState('');
+  const [name, setName] = useState(user?.name || '');
   const [panicMessage, setPanicMessage] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -46,6 +47,11 @@ export const Dashboard = () => {
   useEffect(() => {
     fetchIncidents();
   }, [fetchIncidents]);
+
+  // Sync name from user when user loads
+  useEffect(() => {
+    if (user?.name) setName(user.name);
+  }, [user?.name]);
 
   // Auto-open SOS modal if ?sos=1 is in the URL (guest emergency flow)
   useEffect(() => {
@@ -120,7 +126,7 @@ export const Dashboard = () => {
       }
     }
 
-    await triggerSOS(location, panicMessage, finalLat, finalLng);
+    await triggerSOS(location, panicMessage, finalLat, finalLng, isPureGuest ? name : undefined);
     setIsSOSOpen(false);
     setLocation('');
     setPanicMessage('');
@@ -476,6 +482,19 @@ export const Dashboard = () => {
               )}
 
               <form onSubmit={handleSOS} className="space-y-8">
+                {isPureGuest && (
+                  <div>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Identify_As (Name)</label>
+                    <input
+                      required
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your Name..."
+                      className="input-terminal w-full"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Emergency Details</label>
                   <textarea
