@@ -600,7 +600,7 @@ pub async fn upgrade_guest(
     State(state): State<AppState>,
     claims: crate::utils::jwt::Claims,
     Json(payload): Json<UpgradeRequest>,
-) -> Result<Json<UserResponse>, AppError> {
+) -> Result<Json<AuthResponse>, AppError> {
     // Only allow guests to upgrade
     if claims.role != "guest" {
         return Err(AppError::BadRequest("Only guest accounts can be upgraded".to_string()));
@@ -618,7 +618,7 @@ pub async fn upgrade_guest(
         return Err(AppError::BadRequest("Email already registered".to_string()));
     }
 
-    let password_hash = hash(&payload.password, 4)
+    let password_hash = bcrypt::hash(&payload.password, 4)
         .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
 
     let user = sqlx::query_as::<_, User>(
@@ -635,10 +635,10 @@ pub async fn upgrade_guest(
         AppError::InternalServerError("Failed to upgrade account".to_string())
     })?;
 
-    let token = crate::utils::jwt::encode_token(user.id, "user".to_string())
+    let token = crate::utils::jwt::create_jwt(user.id, "user")
         .map_err(|_| AppError::InternalServerError("Failed to generate token".to_string()))?;
 
-    Ok(Json(UserResponse {
+    Ok(Json(AuthResponse {
         user,
         token,
     }))
