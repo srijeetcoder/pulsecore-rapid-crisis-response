@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDate};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -13,6 +13,12 @@ pub struct User {
     pub role: String,
     pub is_verified: bool,
     pub created_at: DateTime<Utc>,
+    // Extended Profile
+    pub occupation: Option<String>,
+    pub dob: Option<NaiveDate>,
+    pub phone: Option<String>,
+    pub bio: Option<String>,
+    pub emergency_contact: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]

@@ -4,12 +4,19 @@ import { UserCircle, LogOut, Home, ShieldAlert } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export const Settings = () => {
-  const { user, setAuth } = useStore();
+  const { user, setAuth, updateProfile, token } = useStore();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [occupation, setOccupation] = useState(user?.occupation || '');
+  const [dob, setDob] = useState(user?.dob || '');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [emergencyContact, setEmergencyContact] = useState(user?.emergency_contact || '');
+  
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
-  const { token } = useStore();
   const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleDeleteAccount = async () => {
     if (!token) return;
@@ -31,10 +38,27 @@ export const Settings = () => {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess('Settings saved successfully!');
-    setTimeout(() => setSuccess(''), 3000);
+    setLoading(true);
+    setError('');
+    
+    const result = await updateProfile({
+      name,
+      phone,
+      occupation,
+      dob,
+      bio,
+      emergency_contact: emergencyContact
+    });
+
+    setLoading(false);
+    if (result.success) {
+      setSuccess('Profile updated successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } else {
+      setError(result.message);
+    }
   };
 
   const handleLogout = () => {
@@ -49,7 +73,7 @@ export const Settings = () => {
 
       {/* Ambient Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto pb-20">
         <div className="flex items-center justify-between mb-10 relative z-10">
           <div className="flex space-x-6">
             <Link
@@ -90,29 +114,39 @@ export const Settings = () => {
                 <h1 className="text-3xl font-heading font-bold text-white tracking-tight">{user.name}</h1>
                 <p className="font-mono text-xs text-stardust/60 mt-1 uppercase tracking-widest">{user.email}</p>
                 <span className="inline-block mt-4 px-4 py-1.5 bg-void rounded-lg text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-accent-primary border border-accent-primary/20 shadow-inner">
-                  ACCOUNT_ROLE: {user.role}
+                   AUTHENTICATED_AS: {user.role.toUpperCase()}
                 </span>
               </div>
             </div>
 
             <div className="p-10">
-              <h2 className="text-xl font-heading font-bold mb-8 uppercase tracking-widest text-white/80">Personal_Details</h2>
+              <h2 className="text-xl font-heading font-bold mb-8 uppercase tracking-widest text-white/80 border-l-4 border-accent-primary pl-6">Profile_Configuration</h2>
               <form onSubmit={handleSave} className="space-y-8">
                 {success && <div className="p-4 font-mono text-[10px] bg-green-500/10 border border-green-500/30 text-green-500 rounded-lg uppercase tracking-widest text-center">{success}</div>}
+                {error && <div className="p-4 font-mono text-[10px] bg-accent-secondary/10 border border-accent-secondary/30 text-accent-secondary rounded-lg uppercase tracking-widest text-center">{error}</div>}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="md:col-span-2">
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">About_Bio</label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="input-terminal w-full !h-24 py-4"
+                      placeholder="Enter a brief biography..."
+                    />
+                  </div>
                   <div>
-                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Full_Name</label>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Full_Identity_Name</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="input-terminal w-full"
-                      placeholder="Enter your name"
+                      placeholder="Name"
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Email_Address (Immutable)</label>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Identity_Email (Read-Only)</label>
                     <input
                       type="email"
                       value={user.email}
@@ -121,35 +155,59 @@ export const Settings = () => {
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Phone_Number</label>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Current_Occupation</label>
                     <input
-                      type="tel"
+                      type="text"
+                      value={occupation}
+                      onChange={(e) => setOccupation(e.target.value)}
                       className="input-terminal w-full"
-                      placeholder="+91 XXXXX XXXXX"
+                      placeholder="e.g. Software Engineer, Doctor"
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Emergency_Contact</label>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Date_of_Birth</label>
+                    <input
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      className="input-terminal w-full [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Primary_Phone</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="input-terminal w-full"
+                      placeholder="+XX XXXXX XXXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Emergency_Contact_Protocol</label>
                     <input
                       type="text"
+                      value={emergencyContact}
+                      onChange={(e) => setEmergencyContact(e.target.value)}
                       className="input-terminal w-full"
-                      placeholder="Contact Name & Number"
+                      placeholder="Name & Contact Details"
                     />
                   </div>
                 </div>
 
                 <div className="pt-4 flex justify-end">
-                  <Link to="/forgot-password" className="text-[10px] font-mono text-stardust hover:text-accent-primary uppercase tracking-widest transition-colors underline underline-offset-4">
-                    Change / Forgot Password?
+                  <Link to="/forgot-password" className="text-[10px] font-mono text-stardust hover:text-accent-primary uppercase tracking-widest transition-colors underline underline-offset-4 decoration-accent-primary/30">
+                    Need to change security passphrase?
                   </Link>
                 </div>
 
                 <div className="pt-8 flex items-center justify-between border-t border-white/5">
                   <button
                     type="submit"
-                    className="btn-primary !px-10 !py-4 !text-[10px] font-mono uppercase tracking-[0.2em]"
+                    disabled={loading}
+                    className="btn-primary !px-12 !py-4.5 !text-[10px] font-mono uppercase tracking-[0.2em] shadow-xl shadow-accent-primary/10"
                   >
-                    Update_Account
+                    {loading ? 'SYNCHRONIZING...' : 'COMMIT_CHANGES'}
                   </button>
                   <button
                     type="button"

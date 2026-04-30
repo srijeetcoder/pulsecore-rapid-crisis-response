@@ -55,6 +55,18 @@ async fn main() {
         .execute(&pool)
         .await;
 
+    // Profile fields for users
+    let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS occupation TEXT")
+        .execute(&pool).await;
+    let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob DATE")
+        .execute(&pool).await;
+    let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT")
+        .execute(&pool).await;
+    let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT")
+        .execute(&pool).await;
+    let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact TEXT")
+        .execute(&pool).await;
+
     // Run migrations
     //sqlx::migrate!("./migrations")
     //  .run(&pool)

@@ -5,6 +5,11 @@ interface User {
   name: string;
   email: string;
   role: string;
+  occupation?: string;
+  dob?: string;
+  phone?: string;
+  bio?: string;
+  emergency_contact?: string;
 }
 
 export interface Message {
@@ -53,6 +58,7 @@ interface AppState {
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   chatWithAI: (messages: {role: string, text: string}[], context?: string) => Promise<string>;
   fetchProfile: () => Promise<void>;
+  updateProfile: (profile: Partial<User>) => Promise<{ success: boolean; message: string }>;
   setActiveChatIncidentId: (id: string | null) => void;
   toggleRespond: (id: string, isResponding: boolean) => Promise<void>;
   fetchMessages: (incidentId: string) => Promise<void>;
@@ -279,6 +285,33 @@ export const useStore = create<AppState>((set, get) => ({
       }
     } catch (e) {
       console.error(e);
+    }
+  },
+
+  updateProfile: async (profile: Partial<User>) => {
+    const { token, user } = get();
+    if (!token || !user) return { success: false, message: "Not authenticated" };
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...user,
+          ...profile
+        })
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        set({ user: updatedUser });
+        return { success: true, message: "Profile updated successfully" };
+      }
+      return { success: false, message: "Failed to update profile" };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: "Network error" };
     }
   },
 

@@ -23,6 +23,7 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/auth/cleanup-guest", post(auth::cleanup_guest))
         .route("/api/auth/delete-account", delete(auth::delete_account))
         .route("/api/auth/me", get(auth::get_profile))
+        .route("/api/auth/profile", put(auth::update_profile))
         .route("/api/incidents", get(incidents::list_incidents).post(incidents::create_incident))
         .route("/api/incidents/{id}/status", put(incidents::update_status))
         .route("/api/incidents/{id}/respond", post(incidents::toggle_respond))

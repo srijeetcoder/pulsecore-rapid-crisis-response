@@ -2,7 +2,7 @@ use axum::{extract::State, Json};
 use bcrypt::{hash, verify};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{Utc, Duration};
+use chrono::{Utc, Duration, NaiveDate};
 use rand::Rng;
 
 use crate::utils::email::send_email_via_http;
@@ -549,5 +549,39 @@ pub async fn get_profile(
         .await
         .map_err(|_| AppError::NotFound("User not found".to_string()))?;
     
+    Ok(Json(user))
+}
+#[derive(Deserialize)]
+pub struct UpdateProfileRequest {
+    pub name: String,
+    pub occupation: Option<String>,
+    pub dob: Option<NaiveDate>,
+    pub phone: Option<String>,
+    pub bio: Option<String>,
+    pub emergency_contact: Option<String>,
+}
+
+pub async fn update_profile(
+    State(state): State<AppState>,
+    claims: crate::utils::jwt::Claims,
+    Json(payload): Json<UpdateProfileRequest>,
+) -> Result<Json<User>, AppError> {
+    let user = sqlx::query_as::<_, User>(
+        "UPDATE users SET name = $1, occupation = $2, dob = $3, phone = $4, bio = $5, emergency_contact = $6 WHERE id = $7 RETURNING *"
+    )
+    .bind(&payload.name)
+    .bind(&payload.occupation)
+    .bind(&payload.dob)
+    .bind(&payload.phone)
+    .bind(&payload.bio)
+    .bind(&payload.emergency_contact)
+    .bind(claims.sub)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|e| {
+        println!("❌ Profile update error: {}", e);
+        AppError::InternalServerError("Failed to update profile".to_string())
+    })?;
+
     Ok(Json(user))
 }
