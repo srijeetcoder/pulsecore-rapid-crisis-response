@@ -160,7 +160,7 @@ Return ONLY valid JSON matching this exact schema:
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",
   "severity": "critical" | "high" | "medium",
   "details": "A clear, professional summary of the incident details based on the user's keywords",
-  "ai_advice": "Immediate, concise actionable advice including the specific contact number (e.g. Call 108 immediately)"
+  "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately)."
 }"#;
         let body = serde_json::json!({
             "systemInstruction": { "parts": [ { "text": system_prompt } ] },

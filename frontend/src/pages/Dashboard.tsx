@@ -613,6 +613,7 @@ export const Dashboard = () => {
                         localStorage.setItem('previous_guest_id', user.id);
                       }
                       setRegistrationPopupOpen(false);
+                      // Force register mode explicitly via state
                       navigate('/login', { state: { isRegister: true, upgrade: true } });
                     }}
                     className="btn-primary w-full !text-xs"

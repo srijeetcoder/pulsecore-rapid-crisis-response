@@ -8,6 +8,12 @@ type Step = 'login' | 'register' | 'otp';
 export const Login = () => {
   const location = useLocation();
   const [step, setStep] = useState<Step>(location.state?.isRegister ? 'register' : 'login');
+
+  React.useEffect(() => {
+    if (location.state?.isRegister) {
+      setStep('register');
+    }
+  }, [location.state]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');

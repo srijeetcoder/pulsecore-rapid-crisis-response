@@ -1,11 +1,12 @@
 import React from 'react';
 
 /**
- * Regex to match emergency numbers: 
+ * Regex to match emergency numbers and keywords: 
  * - 3-4 digit shortcodes (100, 101, 108, 112, 1078)
  * - Standard Indian 10-digit numbers or with +91
+ * - Keywords like HOSPITAL, POLICE, AMBULANCE, FIRE
  */
-const PHONE_REGEX = /(\b100\b|\b101\b|\b108\b|\b112\b|\b1078\b|\+?91[ -]?\d{10}|\b\d{10}\b|\b\d{3}-\d{8}\b)/g;
+const PHONE_REGEX = /(\b100\b|\b101\b|\b108\b|\b112\b|\b1078\b|\+?91[ -]?\d{10}|\b\d{10}\b|\b\d{3}-\d{8}\b|\bHOSPITAL\b|\bPOLICE\b|\bAMBULANCE\b|\bFIRE\b|\bEMERGENCY\b)/gi;
 
 export const formatEmergencyText = (text: string) => {
   if (!text) return text;
