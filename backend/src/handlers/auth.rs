@@ -106,7 +106,9 @@ pub async fn register(
     println!("=========================================\n");
 
     let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default().replace(" ", "");
+    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default()
+        .trim_matches('"')
+        .replace(" ", "");
 
     if !smtp_username.is_empty() && !smtp_password.is_empty() {
         let from_addr = smtp_username.clone();
@@ -138,10 +140,10 @@ pub async fn register(
 
             match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
                 Ok(builder) => {
-                    let mailer = builder.port(465).credentials(creds).build();
+                    let mailer = builder.port(587).credentials(creds).build();
                     match mailer.send(email_result).await {
                         Ok(_) => println!("✅ Email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send email: {}", e),
+                        Err(e) => println!("❌ Failed to send email (port 587): {}", e),
                     }
                 }
                 Err(e) => println!("❌ SMTP relay error: {}", e),
@@ -502,7 +504,9 @@ pub async fn forgot_password(
     println!("=========================================\n");
 
     let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default().replace(" ", "");
+    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default()
+        .trim_matches('"')
+        .replace(" ", "");
 
     if !smtp_username.is_empty() && !smtp_password.is_empty() {
         let from_addr = smtp_username.clone();
@@ -534,10 +538,10 @@ pub async fn forgot_password(
 
             match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com") {
                 Ok(builder) => {
-                    let mailer = builder.port(465).credentials(creds).build();
+                    let mailer = builder.port(587).credentials(creds).build();
                     match mailer.send(email_result).await {
                         Ok(_) => println!("✅ Reset email sent successfully to {}", to_addr),
-                        Err(e) => println!("❌ Failed to send reset email: {}", e),
+                        Err(e) => println!("❌ Failed to send reset email (port 587): {}", e),
                     }
                 }
                 Err(e) => println!("❌ SMTP relay error: {}", e),
