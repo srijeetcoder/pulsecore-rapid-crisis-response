@@ -86,7 +86,7 @@ pub async fn ai_chat(
             }));
         }
 
-        let system_prompt = "You are a crisis response AI assistant for India. Be concise, actionable, and calming. Always reference Indian emergency services where applicable: Police (100 / 112), Ambulance (108), Fire (101), Disaster Helpline (1078), NDRF (011-24363260). Tailor advice to Indian urban and rural contexts.";
+        let system_prompt = "You are a crisis response AI assistant for India. Be concise, actionable, and calming. Always provide the relevant emergency contact number (Police 100/112, Ambulance 108, Fire 101, Disaster Helpline 1078, NDRF 011-24363260) in your response based on the emergency type. Ensure these numbers are prominent.";
         let body = serde_json::json!({
             "systemInstruction": { "parts": [ { "text": system_prompt } ] },
             "contents": contents,
@@ -154,12 +154,13 @@ pub async fn parse_emergency_data(panic_message: &str) -> Option<ParsedEmergency
     if !keys.is_empty() {
         let system_prompt = r#"You are a highly advanced Crisis Response AI. Analyze the provided panic message.
 You must automatically understand the type of emergency based on keywords, properly describe the incident details, and provide actionable insight/advice.
+IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
 Return ONLY valid JSON matching this exact schema:
 {
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",
   "severity": "critical" | "high" | "medium",
   "details": "A clear, professional summary of the incident details based on the user's keywords",
-  "ai_advice": "Immediate, concise (1-2 sentences) actionable advice and insight for this specific emergency"
+  "ai_advice": "Immediate, concise actionable advice including the specific contact number (e.g. Call 108 immediately)"
 }"#;
         let body = serde_json::json!({
             "systemInstruction": { "parts": [ { "text": system_prompt } ] },

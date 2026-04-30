@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { formatEmergencyText } from '../utils/text';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Fix leaflet icon
@@ -330,7 +331,7 @@ export const Dashboard = () => {
                             <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
                               <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
                               <p className="text-sm text-stardust flex items-start">
-                                <span className="mr-3 text-accent-primary">⚙️</span> {incident.ai_advice}
+                                <span className="mr-3 text-accent-primary">⚙️</span> {formatEmergencyText(incident.ai_advice || '')}
                               </p>
                             </div>
                           )}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store/store';
 import { MessageSquare, X, Send, Loader2, ChevronDown, ShieldAlert } from 'lucide-react';
+import { formatEmergencyText } from '../utils/text';
 import { format } from 'date-fns';
 
 export const LiveChatWidget: React.FC = () => {
@@ -146,7 +147,7 @@ export const LiveChatWidget: React.FC = () => {
                         : 'bg-void border border-white/5 text-stardust rounded-bl-sm'
                         }`}
                     >
-                      <p className="font-body">{msg.content}</p>
+                      <p className="font-body">{formatEmergencyText(msg.content)}</p>
                       <p className={`font-mono text-[9px] mt-2 uppercase tracking-widest ${isOwn ? 'text-white/60' : 'text-accent-secondary/40'}`}>
                         {format(new Date(msg.timestamp), 'HH:mm:ss')}
                       </p>
