@@ -4,11 +4,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{Utc, Duration};
 use rand::Rng;
-use std::env;
 
-use lettre::{Message, AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::message::header::ContentType;
+use crate::utils::email::send_email_via_http;
 
 use crate::{
     models::User,
@@ -105,56 +102,21 @@ pub async fn register(
     println!("🔐 OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default()
-        .trim_matches('"')
-        .replace(" ", "");
-
-    if !smtp_username.is_empty() && !smtp_password.is_empty() {
-        let from_addr = smtp_username.clone();
-        let to_addr = payload.email.clone();
-        let otp_clone = otp.clone();
-        let user_clone = smtp_username.clone();
-        let pass_clone = smtp_password.clone();
-
-        tokio::spawn(async move {
-            let email_result = Message::builder()
-                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
-                .to(to_addr.parse().unwrap())
-                .subject("Your OTP Verification Code - PulseCore")
-                .header(ContentType::TEXT_HTML)
-                .body(format!(
-                    r#"
-                    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                        <p style="color:#94a3b8;">Your email verification code is:</p>
-                        <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                        <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
-                    </div>
-                    "#,
-                    otp_clone
-                ))
-                .unwrap();
-
-            let creds = Credentials::new(user_clone, pass_clone);
-
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.googlemail.com") {
-                Ok(builder) => {
-                    let mailer = builder.port(587).credentials(creds).build();
-                    match mailer.send(email_result).await {
-                        Ok(_) => println!("✅ Email sent successfully to {}", to_addr),
-                        Err(e) => {
-                            println!("❌ Failed to send email to {}: {}", to_addr, e);
-                            println!("   Check if SMTP_USERNAME ({}) is correct and App Password is valid.", from_addr);
-                        }
-                    }
-                }
-                Err(e) => println!("❌ SMTP relay error (googlemail): {}", e),
-            }
-        });
-    } else {
-        println!("⚠️  SMTP_USERNAME or SMTP_PASSWORD not set in .env — skipping email send.");
-    }
+    let to_addr = payload.email.clone();
+    let otp_clone = otp.clone();
+    tokio::spawn(async move {
+        let subject = "Your OTP Verification Code - PulseCore";
+        let body = format!(
+            r#"<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
+                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
+                <p style="color:#94a3b8;">Your email verification code is:</p>
+                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
+                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. Do not share it with anyone.</p>
+            </div>"#,
+            otp_clone
+        );
+        send_email_via_http(&to_addr, subject, &body).await;
+    });
 
 
 
@@ -506,54 +468,21 @@ pub async fn forgot_password(
     println!("🔐 Password Reset OTP For {}: {}", payload.email, otp);
     println!("=========================================\n");
 
-    let smtp_username = env::var("SMTP_USERNAME").unwrap_or_default();
-    let smtp_password = env::var("SMTP_PASSWORD").unwrap_or_default()
-        .trim_matches('"')
-        .replace(" ", "");
-
-    if !smtp_username.is_empty() && !smtp_password.is_empty() {
-        let from_addr = smtp_username.clone();
-        let to_addr = payload.email.clone();
-        let otp_clone = otp.clone();
-        let user_clone = smtp_username.clone();
-        let pass_clone = smtp_password.clone();
-
-        tokio::spawn(async move {
-            let email_result = Message::builder()
-                .from(format!("PulseCore <{}>", from_addr).parse().unwrap())
-                .to(to_addr.parse().unwrap())
-                .subject("Password Reset OTP - PulseCore")
-                .header(ContentType::TEXT_HTML)
-                .body(format!(
-                    r#"
-                    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
-                        <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
-                        <p style="color:#94a3b8;">Your password reset verification code is:</p>
-                        <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
-                        <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>
-                    </div>
-                    "#,
-                    otp_clone
-                ))
-                .unwrap();
-
-            let creds = Credentials::new(user_clone, pass_clone);
-
-            match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.googlemail.com") {
-                Ok(builder) => {
-                    let mailer = builder.port(587).credentials(creds).build();
-                    match mailer.send(email_result).await {
-                        Ok(_) => println!("✅ Reset email sent successfully to {}", to_addr),
-                        Err(e) => {
-                            println!("❌ Failed to send reset email to {}: {}", to_addr, e);
-                            println!("   Check if SMTP_USERNAME ({}) is correct and App Password is valid.", from_addr);
-                        }
-                    }
-                }
-                Err(e) => println!("❌ SMTP relay error (googlemail reset): {}", e),
-            }
-        });
-    }
+    let to_addr = payload.email.clone();
+    let otp_clone = otp.clone();
+    tokio::spawn(async move {
+        let subject = "Password Reset OTP - PulseCore";
+        let body = format!(
+            r#"<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1e293b;color:#f1f5f9;border-radius:12px;">
+                <h2 style="color:#ef4444;margin-bottom:8px;">🚨 PulseCore</h2>
+                <p style="color:#94a3b8;">Your password reset verification code is:</p>
+                <div style="font-size:48px;font-weight:bold;letter-spacing:12px;text-align:center;padding:24px;background:#0f172a;border-radius:8px;margin:16px 0;">{}</div>
+                <p style="color:#94a3b8;font-size:14px;">This code expires in 15 minutes. If you didn't request this, please ignore this email.</p>
+            </div>"#,
+            otp_clone
+        );
+        send_email_via_http(&to_addr, subject, &body).await;
+    });
 
 
 
