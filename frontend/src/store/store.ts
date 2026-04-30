@@ -42,6 +42,7 @@ interface AppState {
   incidents: Incident[];
   messages: Record<string, Message[]>;
   activeChatIncidentId: string | null;
+  isChatOpen: boolean;
   isGuestLoading: boolean;
   isRegistrationPopupOpen: boolean;
   setRegistrationPopupOpen: (isOpen: boolean) => void;
@@ -61,6 +62,7 @@ interface AppState {
   fetchProfile: () => Promise<void>;
   updateProfile: (profile: Partial<User>) => Promise<{ success: boolean; message: string }>;
   setActiveChatIncidentId: (id: string | null) => void;
+  setChatOpen: (isOpen: boolean) => void;
   toggleRespond: (id: string, isResponding: boolean) => Promise<void>;
   fetchMessages: (incidentId: string) => Promise<void>;
   sendMessage: (incidentId: string, content: string) => Promise<void>;
@@ -89,11 +91,13 @@ export const useStore = create<AppState>((set, get) => ({
   incidents: [],
   messages: {},
   activeChatIncidentId: null,
+  isChatOpen: false,
   isGuestLoading: false,
   isRegistrationPopupOpen: false,
 
   setRegistrationPopupOpen: (isOpen) => set({ isRegistrationPopupOpen: isOpen }),
-  setActiveChatIncidentId: (id) => set({ activeChatIncidentId: id }),
+  setChatOpen: (isOpen) => set({ isChatOpen: isOpen }),
+  setActiveChatIncidentId: (id) => set({ activeChatIncidentId: id, isChatOpen: !!id }),
 
   setAuth: (user, token) => {
     if (token) {

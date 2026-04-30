@@ -63,13 +63,20 @@ export const Login = () => {
     }
 
     const isRegister = step === 'register';
-    const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+    const isUpgrade = location.state?.upgrade && isRegister;
+    const endpoint = isUpgrade ? '/api/auth/upgrade-guest' : (isRegister ? '/api/auth/register' : '/api/auth/login');
     const payload = isRegister ? { email, password, name, role } : { email, password };
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (isUpgrade) {
+        const token = useStore.getState().token;
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -79,12 +86,19 @@ export const Login = () => {
         throw new Error(data.error || 'Authentication failed');
       }
 
-      if (isRegister) {
+      if (isRegister && !isUpgrade) {
         // Assume backend returns { message: "OTP sent" }
         setStep('otp');
         setSuccessMsg('Registration successful! Please check the terminal for the OTP.');
       } else {
+        // For login or upgrade, we get the user and token immediately
         setAuth(data.user, data.token);
+        if (isUpgrade) {
+          setSuccessMsg('Account upgraded successfully! All your reports are saved.');
+          setTimeout(() => navigate('/dashboard'), 1500);
+          return;
+        }
+        
         if (location.state?.triggerSOS) {
           navigate('/dashboard', { state: { triggerSOS: true } });
         } else if (data.user.role === 'guest') {

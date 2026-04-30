@@ -364,6 +364,17 @@ export const Dashboard = () => {
                             </div>
                           )}
 
+                          {!isAuthority && (
+                            <button
+                              onClick={() => {
+                                setActiveChatIncidentId(incident.id);
+                              }}
+                              className="btn-outline !px-3 !py-2 !text-[10px] font-mono uppercase tracking-wider !rounded-xl mt-1 !border-accent-secondary/30 hover:!bg-accent-secondary/10 !text-accent-secondary"
+                            >
+                              Open Chat
+                            </button>
+                          )}
+
                           {isAuthority && incident.responder_id === user?.id && (
                             <button
                               onClick={() => setActiveChatIncidentId(incident.id)}
@@ -601,7 +612,7 @@ export const Dashboard = () => {
                         localStorage.setItem('previous_guest_id', user.id);
                       }
                       setRegistrationPopupOpen(false);
-                      window.location.href = '/login?register=1';
+                      navigate('/login', { state: { isRegister: true, upgrade: true } });
                     }}
                     className="btn-primary w-full !text-xs"
                   >

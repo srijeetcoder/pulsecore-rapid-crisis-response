@@ -266,7 +266,10 @@ pub async fn cleanup_guest(
         .bind(claims.sub)
         .execute(&mut *tx)
         .await
-        .map_err(|_| AppError::InternalServerError("Failed to delete guest account".to_string()))?;
+        .map_err(|e| {
+            println!("❌ CRITICAL: Guest user deletion failed for {}: {}", claims.sub, e);
+            AppError::InternalServerError("Failed to delete guest account".to_string())
+        })?;
 
     tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
 
@@ -584,4 +587,59 @@ pub async fn update_profile(
     })?;
 
     Ok(Json(user))
+}
+
+#[derive(Deserialize)]
+pub struct UpgradeRequest {
+    pub email: String,
+    pub password: String,
+    pub name: String,
+}
+
+pub async fn upgrade_guest(
+    State(state): State<AppState>,
+    claims: crate::utils::jwt::Claims,
+    Json(payload): Json<UpgradeRequest>,
+) -> Result<Json<UserResponse>, AppError> {
+    // Only allow guests to upgrade
+    if claims.role != "guest" {
+        return Err(AppError::BadRequest("Only guest accounts can be upgraded".to_string()));
+    }
+
+    // Check if email already exists
+    let email_exists = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND id != $2)")
+        .bind(&payload.email)
+        .bind(claims.sub)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|_| AppError::InternalServerError("Database error".to_string()))?;
+
+    if email_exists {
+        return Err(AppError::BadRequest("Email already registered".to_string()));
+    }
+
+    let password_hash = hash(&payload.password, 4)
+        .map_err(|_| AppError::InternalServerError("Failed to hash password".to_string()))?;
+
+    let user = sqlx::query_as::<_, User>(
+        "UPDATE users SET email = $1, password_hash = $2, name = $3, role = 'user', is_verified = true WHERE id = $4 RETURNING *"
+    )
+    .bind(&payload.email)
+    .bind(password_hash)
+    .bind(&payload.name)
+    .bind(claims.sub)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|e| {
+        println!("Upgrade error: {}", e);
+        AppError::InternalServerError("Failed to upgrade account".to_string())
+    })?;
+
+    let token = crate::utils::jwt::encode_token(user.id, "user".to_string())
+        .map_err(|_| AppError::InternalServerError("Failed to generate token".to_string()))?;
+
+    Ok(Json(UserResponse {
+        user,
+        token,
+    }))
 }

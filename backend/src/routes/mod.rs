@@ -21,6 +21,7 @@ pub fn app_router(state: AppState) -> Router {
         .route("/api/auth/reset-password", post(auth::reset_password))
         .route("/api/auth/guest", post(auth::guest_login))
         .route("/api/auth/cleanup-guest", post(auth::cleanup_guest))
+        .route("/api/auth/upgrade-guest", post(auth::upgrade_guest))
         .route("/api/auth/delete-account", delete(auth::delete_account))
         .route("/api/auth/me", get(auth::get_profile))
         .route("/api/auth/profile", put(auth::update_profile))
