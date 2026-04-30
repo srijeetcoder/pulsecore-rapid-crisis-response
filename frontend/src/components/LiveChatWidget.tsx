@@ -26,11 +26,11 @@ export const LiveChatWidget: React.FC = () => {
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   
   // Find the incident we should be chatting about
-  const activeIncident = incidents.find(i => 
-    isAuthority 
-      ? i.id === activeChatIncidentId 
-      : i.reporter_id === user?.id && i.status !== 'resolved'
-  );
+  // Find the incident we should be chatting about
+  // Priority 1: The incident explicitly opened via "Open Chat" button
+  // Priority 2: (For victims) Their current active incident if no specific one is selected
+  const activeIncident = incidents.find(i => i.id === activeChatIncidentId) || 
+                        incidents.find(i => !isAuthority && i.reporter_id === user?.id && i.status !== 'resolved');
 
   const incidentMessages = activeIncident ? (messages[activeIncident.id] || []) : [];
   const isResponderAssigned = !!activeIncident?.responder_id;
