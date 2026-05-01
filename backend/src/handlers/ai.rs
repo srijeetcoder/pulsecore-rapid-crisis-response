@@ -170,7 +170,7 @@ Return ONLY valid JSON matching this exact schema:
   "severity": "critical" | "high" | "medium",
   "details": "A clear, professional summary of the incident details based on the user's keywords",
   "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately).",
-  "hospital_contacts": "A well-formatted string listing nearby hospitals and their phone numbers (e.g., '1. Ruby General Hospital: +91 33 6687 1800\\n2. Peerless Hospital: +91 33 4011 1222')"
+  "hospital_contacts": "A well-formatted list of nearby hospitals and their direct phone numbers. Use EXACTLY this format for each entry: '1. Hospital Name: Phone Number\\n2. Next Hospital: Phone Number'. Do not add any other text."
 }}"#, location_context);
 
         let body = serde_json::json!({

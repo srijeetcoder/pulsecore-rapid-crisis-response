@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiveChatWidget } from '../components/LiveChatWidget';
 import { useStore } from '../store/store';
-import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity, Search, Filter, Calendar, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity, Search, Filter, Calendar, ArrowUpDown, ChevronDown, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -405,11 +405,45 @@ export const Dashboard = () => {
                           )}
 
                           {incident.hospital_contacts && (
-                            <div className="mt-3 p-4 bg-accent-secondary/5 border border-accent-secondary/20 rounded-xl relative">
-                              <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-secondary/30">NEARBY_HOSPITALS</div>
-                              <p className="text-sm text-stardust flex items-start whitespace-pre-wrap">
-                                <span className="mr-3 text-accent-secondary">🏥</span> {formatEmergencyText(incident.hospital_contacts || '')}
-                              </p>
+                            <div className="mt-8 space-y-4">
+                              <div className="flex items-center space-x-2 px-1">
+                                <Activity className="w-3.5 h-3.5 text-accent-secondary" />
+                                <span className="font-mono text-[9px] text-accent-secondary uppercase tracking-[0.3em] font-bold">Priority_Medical_Sync</span>
+                              </div>
+                              <div className="grid grid-cols-1 gap-3">
+                                {incident.hospital_contacts.split('\n').filter(line => line.trim()).map((line, idx) => {
+                                  // Match format: "1. Name: Phone" or "Name: Phone"
+                                  const match = line.match(/^(?:\d+\.\s*)?(.*?):\s*(.*)$/);
+                                  if (match) {
+                                    const [, name, phone] = match;
+                                    return (
+                                      <div key={idx} className="bg-void/40 border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-accent-secondary/30 transition-all hover:bg-accent-secondary/[0.02]">
+                                        <div className="flex items-center space-x-4">
+                                          <div className="w-10 h-10 rounded-lg bg-accent-secondary/10 flex items-center justify-center border border-accent-secondary/20 shadow-lg shadow-accent-secondary/5 transition-transform group-hover:scale-110">
+                                            <ShieldAlert className="w-5 h-5 text-accent-secondary" />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <p className="text-[11px] font-heading font-bold text-white uppercase tracking-wider truncate">{name}</p>
+                                            <p className="text-[10px] font-mono text-stardust/60 mt-1">{phone}</p>
+                                          </div>
+                                        </div>
+                                        <a 
+                                          href={`tel:${phone.replace(/[^\d+]/g, '')}`}
+                                          className="btn-ghost !p-2.5 !rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:!bg-accent-secondary hover:!text-white border border-transparent hover:border-accent-secondary/50"
+                                          title={`Call ${name}`}
+                                        >
+                                          <Phone className="w-4 h-4" />
+                                        </a>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={idx} className="bg-void/40 border border-white/5 rounded-xl p-4 text-[10px] font-mono text-stardust/60 italic">
+                                      {formatEmergencyText(line)}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>
