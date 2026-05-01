@@ -449,19 +449,27 @@ export const Dashboard = () => {
                             <div className="mt-8 space-y-4">
                               <div className="flex items-center space-x-2 px-1">
                                 <Activity className="w-3.5 h-3.5 text-accent-secondary" />
-                                <span className="font-mono text-[9px] text-accent-secondary uppercase tracking-[0.3em] font-bold">Priority_Medical_Sync</span>
+                                <span className="font-mono text-[9px] text-accent-secondary uppercase tracking-[0.3em] font-bold">Priority_Emergency_Sync</span>
                               </div>
                               <div className="grid grid-cols-1 gap-3">
                                 {incident.hospital_contacts.split('\n').filter(line => line.trim()).map((line, idx) => {
-                                  // Match format: "1. Name: Phone" or "Name: Phone"
                                   const match = line.match(/^(?:\d+\.\s*)?(.*?):\s*(.*)$/);
                                   if (match) {
                                     const [, name, phone] = match;
+                                    const isPolice = name.toLowerCase().includes('police');
+                                    const isFire = name.toLowerCase().includes('fire');
+                                    
                                     return (
                                       <div key={idx} className="bg-void/40 border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-accent-secondary/30 transition-all hover:bg-accent-secondary/[0.02]">
                                         <div className="flex items-center space-x-4">
-                                          <div className="w-10 h-10 rounded-lg bg-accent-secondary/10 flex items-center justify-center border border-accent-secondary/20 shadow-lg shadow-accent-secondary/5 transition-transform group-hover:scale-110">
-                                            <ShieldAlert className="w-5 h-5 text-accent-secondary" />
+                                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shadow-lg transition-transform group-hover:scale-110 ${
+                                            isPolice ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-blue-500/5' :
+                                            isFire ? 'bg-orange-500/10 border-orange-500/20 text-orange-400 shadow-orange-500/5' :
+                                            'bg-accent-secondary/10 border-accent-secondary/20 text-accent-secondary shadow-accent-secondary/5'
+                                          }`}>
+                                            {isPolice ? <ShieldAlert className="w-5 h-5" /> : 
+                                             isFire ? <Activity className="w-5 h-5" /> : 
+                                             <ShieldAlert className="w-5 h-5" />}
                                           </div>
                                           <div className="min-w-0">
                                             <p className="text-[11px] font-heading font-bold text-white uppercase tracking-wider truncate">{name}</p>

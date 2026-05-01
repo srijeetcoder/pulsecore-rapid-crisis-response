@@ -163,14 +163,18 @@ pub async fn parse_emergency_data(panic_message: &str, location: &str, lat: Opti
 You must automatically understand the type of emergency based on keywords, properly describe the incident details, and provide actionable insight/advice.
 IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
 
-ADDITIONALLY: Provide a list of 2-3 nearby hospitals and their direct phone numbers based on the location provided. If the specific location is unknown, provide major emergency centers in the general region.
+ADDITIONALLY: Provide a list of 2-3 most relevant emergency contacts based on the situation. 
+- If it's a crime/theft: Include nearby Police Stations and their direct numbers.
+- If it's medical: Include nearby Hospitals.
+- If it's fire: Include nearby Fire Stations.
+Use EXACTLY this format for each entry: '1. Service Name: Phone Number\n2. Next Service: Phone Number'. Do not add any other text.
 Return ONLY valid JSON matching this exact schema:
 {{
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",
   "severity": "critical" | "high" | "medium",
   "details": "A clear, professional summary of the incident details based on the user's keywords",
   "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately).",
-  "hospital_contacts": "A well-formatted list of nearby hospitals and their direct phone numbers. Use EXACTLY this format for each entry: '1. Hospital Name: Phone Number\\n2. Next Hospital: Phone Number'. Do not add any other text."
+  "hospital_contacts": "A well-formatted list of nearby services (Police/Fire/Hospital) and their phone numbers."
 }}"#, location_context);
 
         let body = serde_json::json!({
@@ -229,6 +233,6 @@ Return ONLY valid JSON matching this exact schema:
         severity: "high".to_string(),
         details: panic_message.to_string(),
         ai_advice: advice.to_string(),
-        hospital_contacts: Some("1. Unified National Helpline: 112\n2. Local District Hospital: Contact 108 for nearest dispatch".to_string()),
+        hospital_contacts: Some("1. Police Support: 100\n2. Ambulance Dispatch: 108\n3. Unified Emergency: 112".to_string()),
     })
 }
