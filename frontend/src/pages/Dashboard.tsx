@@ -396,11 +396,52 @@ export const Dashboard = () => {
                           )}
 
                           {incident.ai_advice && (
-                            <div className="mt-4 p-4 bg-accent-primary/5 border border-accent-primary/20 rounded-xl relative">
-                              <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
-                              <p className="text-sm text-stardust flex items-start">
-                                <span className="mr-3 text-accent-primary">⚙️</span> {formatEmergencyText(incident.ai_advice || '')}
-                              </p>
+                            <div className="mt-4 p-5 bg-accent-primary/[0.03] border border-accent-primary/20 rounded-2xl relative overflow-hidden group shadow-lg shadow-accent-primary/5">
+                              {/* Background Pulse */}
+                              <div className="absolute inset-0 bg-accent-primary/[0.01] animate-pulse pointer-events-none"></div>
+                              
+                              {/* Glowing Edge */}
+                              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-accent-primary via-accent-primary/50 to-transparent"></div>
+
+                              <div className="flex items-center justify-between mb-4 relative z-10">
+                                <div className="flex items-center space-x-3">
+                                  <div className="relative h-5 w-5 flex items-center justify-center">
+                                    <Activity className="w-4 h-4 text-accent-primary relative z-10" />
+                                    <div className="absolute inset-0 bg-accent-primary/30 blur-md animate-pulse rounded-full"></div>
+                                  </div>
+                                  <span className="font-mono text-[10px] text-accent-primary uppercase tracking-[0.3em] font-bold">Crisis_Intelligence_Brief</span>
+                                </div>
+                                <div className="flex items-center space-x-2 bg-accent-primary/10 px-2 py-1 rounded-md border border-accent-primary/20">
+                                  <div className="w-1 h-1 rounded-full bg-accent-primary animate-ping"></div>
+                                  <span className="font-mono text-[8px] text-accent-primary font-bold uppercase tracking-widest">Synchronized</span>
+                                </div>
+                              </div>
+
+                              <div className="relative z-10 pl-2">
+                                <div className="text-[13px] leading-relaxed text-white/90 font-body">
+                                  {formatEmergencyText(incident.ai_advice || '')}
+                                </div>
+                              </div>
+                              
+                              <div className="mt-5 pt-3 border-t border-white/5 flex justify-between items-center relative z-10">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-mono text-[8px] text-stardust/30 uppercase tracking-widest">Protocol: OPS_ADVISORY_v2.4</span>
+                                </div>
+                                <div className="flex space-x-1">
+                                  {[1, 2, 3].map(i => (
+                                    <div key={i} className="w-0.5 h-3 bg-accent-primary/20 rounded-full overflow-hidden">
+                                      <div 
+                                        className="w-full bg-accent-primary animate-pulse" 
+                                        style={{ 
+                                          height: '100%', 
+                                          animationDuration: `${1 + i * 0.5}s`,
+                                          animationDelay: `${i * 0.2}s`
+                                        }}
+                                      ></div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           )}
 
