@@ -190,7 +190,7 @@ Return ONLY valid JSON matching this exact schema:
   "details": "A clear, professional summary of the incident details based on the user's keywords",
   "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately).",
   "hospital_contacts": "A well-formatted list of nearby services (Police/Fire/Hospital) and their phone numbers."
-}}"#, location_context);
+}}"#, location_context, situational_context);
 
         let body = serde_json::json!({
             "systemInstruction": { "parts": [ { "text": system_prompt } ] },
