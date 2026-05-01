@@ -114,7 +114,7 @@ export const AiChatWidget: React.FC = () => {
           }`}
         style={{ maxHeight: 'calc(100vh - 140px)' }}
       >
-        <div className="card-terminal !p-0 shadow-black/50 flex flex-col overflow-hidden"
+        <div className="card-glass !p-0 shadow-black/50 flex flex-col overflow-hidden backdrop-blur-2xl bg-base/40 border-accent-primary/20"
           style={{ height: '480px' }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-accent-primary/30 to-accent-primary/10 border-b border-white/5 shrink-0">
@@ -153,7 +153,7 @@ export const AiChatWidget: React.FC = () => {
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
                     ? 'bg-accent-primary text-white rounded-br-sm shadow-lg shadow-accent-primary/10'
-                    : 'bg-void border border-white/5 text-stardust rounded-bl-sm'
+                    : 'bg-void/40 backdrop-blur-md border border-white/5 text-stardust rounded-bl-sm'
                     }`}
                 >
                   <span
@@ -186,7 +186,7 @@ export const AiChatWidget: React.FC = () => {
           </div>
 
           {/* Input */}
-          <div className="px-4 py-4 border-t border-white/5 bg-surface shrink-0">
+          <div className="px-4 py-4 border-t border-white/5 bg-white/5 backdrop-blur-xl shrink-0">
             <div className="flex items-center gap-3 bg-void border border-white/5 rounded-xl px-4 py-2.5 focus-within:border-accent-primary transition-all duration-300">
               <input
                 ref={inputRef}

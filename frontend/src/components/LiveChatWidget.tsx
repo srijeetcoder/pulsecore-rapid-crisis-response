@@ -80,7 +80,7 @@ export const LiveChatWidget: React.FC = () => {
       className="fixed bottom-6 left-6 z-50 w-[380px] flex flex-col transition-all duration-300 ease-in-out"
       style={{ maxHeight: 'calc(100vh - 100px)' }}
     >
-      <div className="card-terminal !p-0 shadow-2xl shadow-black flex flex-col overflow-hidden border-accent-secondary/30"
+      <div className="card-glass !p-0 shadow-2xl shadow-black flex flex-col overflow-hidden border-accent-secondary/30 backdrop-blur-2xl bg-base/40"
         style={{ height: '550px' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-accent-secondary/20 to-accent-secondary/5 border-b border-white/5 shrink-0">
@@ -139,7 +139,7 @@ export const LiveChatWidget: React.FC = () => {
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${isOwn
                       ? 'bg-accent-secondary text-white rounded-br-sm shadow-xl shadow-accent-secondary/5'
-                      : 'bg-void border border-white/10 text-stardust rounded-bl-sm shadow-inner'
+                      : 'bg-void/40 backdrop-blur-md border border-white/10 text-stardust rounded-bl-sm shadow-inner'
                       }`}
                   >
                     <p className="font-body">{formatEmergencyText(msg.content)}</p>
