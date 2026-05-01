@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 /**
  * Regex to match emergency numbers and keywords: 
