@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LiveChatWidget } from '../components/LiveChatWidget';
 import { useStore } from '../store/store';
-import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, ShieldAlert, Navigation, Settings as SettingsIcon, Trash2, Home, Activity, Search, Filter, Calendar, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -38,6 +38,9 @@ export const Dashboard = () => {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date' | 'severity' | 'type'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
@@ -170,6 +173,34 @@ export const Dashboard = () => {
     zoom = 13;
   }
 
+  const filteredAndSortedIncidents = useMemo(() => {
+    return incidents
+      .filter(inc => isAuthority || inc.reporter_id === user?.id)
+      .filter(inc => {
+        const query = searchQuery.toLowerCase();
+        return (
+          inc.location.toLowerCase().includes(query) ||
+          (inc.emergency_type || '').toLowerCase().includes(query) ||
+          (inc.details || '').toLowerCase().includes(query)
+        );
+      })
+      .sort((a, b) => {
+        let comparison = 0;
+        if (sortBy === 'date') {
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        } else if (sortBy === 'severity') {
+          const severityOrder = { critical: 3, high: 2, medium: 1, low: 0 };
+          const aSev = a.severity.toLowerCase();
+          const bSev = b.severity.toLowerCase();
+          comparison = (severityOrder[aSev as keyof typeof severityOrder] || 0) - 
+                       (severityOrder[bSev as keyof typeof severityOrder] || 0);
+        } else if (sortBy === 'type') {
+          comparison = (a.emergency_type || '').localeCompare(b.emergency_type || '');
+        }
+        return sortOrder === 'desc' ? -comparison : comparison;
+      });
+  }, [incidents, isAuthority, user?.id, searchQuery, sortBy, sortOrder]);
+
   // Wait for the full profile sync (ensures we have user.id, etc.)
   if (!user || !user.id) {
     return (
@@ -268,19 +299,54 @@ export const Dashboard = () => {
 
             {/* Incidents List */}
             <div className="card-terminal shadow-xl">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-heading font-bold text-white">Active Incidents</h2>
-                {isAuthority && incidents.some(i => i.status === 'resolved') && (
-                  <span className="font-mono text-[10px] text-stardust uppercase tracking-widest">
-                    Resolved reports archived
-                  </span>
-                )}
+              <div className="flex flex-col space-y-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-heading font-bold text-white">Active Incidents</h2>
+                  {isAuthority && incidents.some(i => i.status === 'resolved') && (
+                    <span className="font-mono text-[10px] text-stardust uppercase tracking-widest">
+                      Resolved reports archived
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stardust/40 group-focus-within:text-accent-primary transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="SEARCH_BY_LOCATION_OR_TYPE..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="input-terminal w-full !pl-12 !py-3 !text-[10px] font-mono uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative group">
+                      <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stardust/40" />
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                        className="input-terminal !pl-12 !pr-8 !py-3 !text-[10px] font-mono uppercase tracking-widest appearance-none cursor-pointer"
+                      >
+                        <option value="date">SORT_BY_DATE</option>
+                        <option value="severity">SORT_BY_SEVERITY</option>
+                        <option value="type">SORT_BY_TYPE</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 text-stardust/40 pointer-events-none" />
+                    </div>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="btn-outline !p-3 !bg-surface/50 hover:!border-accent-primary group"
+                      title={sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
+                    >
+                      <ArrowUpDown className={`w-4 h-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="space-y-4">
                 <AnimatePresence mode="popLayout">
-                  {incidents
-                    .filter(inc => isAuthority || inc.reporter_id === user?.id)
-                    .map((incident) => (
+                  {filteredAndSortedIncidents.map((incident) => (
                     <motion.div
                       layout
                       initial={{ opacity: 0, x: -20 }}
@@ -303,7 +369,9 @@ export const Dashboard = () => {
                               {incident.severity}
                             </span>
                             <span className="text-stardust font-mono text-[10px] uppercase tracking-widest flex items-center">
-                              <Clock className="w-3 h-3 mr-1.5" />
+                              <Calendar className="w-3 h-3 mr-1.5" />
+                              {format(new Date(incident.created_at), 'MMM dd, yyyy')}
+                              <Clock className="w-3 h-3 ml-3 mr-1.5" />
                               {format(new Date(incident.created_at), 'HH:mm:ss')}
                             </span>
                             {incident.emergency_type && (
@@ -332,6 +400,15 @@ export const Dashboard = () => {
                               <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-primary/30">CRISIS AI</div>
                               <p className="text-sm text-stardust flex items-start">
                                 <span className="mr-3 text-accent-primary">⚙️</span> {formatEmergencyText(incident.ai_advice || '')}
+                              </p>
+                            </div>
+                          )}
+
+                          {incident.hospital_contacts && (
+                            <div className="mt-3 p-4 bg-accent-secondary/5 border border-accent-secondary/20 rounded-xl relative">
+                              <div className="absolute top-2 right-4 font-mono text-[9px] text-accent-secondary/30">NEARBY_HOSPITALS</div>
+                              <p className="text-sm text-stardust flex items-start whitespace-pre-wrap">
+                                <span className="mr-3 text-accent-secondary">🏥</span> {formatEmergencyText(incident.hospital_contacts || '')}
                               </p>
                             </div>
                           )}

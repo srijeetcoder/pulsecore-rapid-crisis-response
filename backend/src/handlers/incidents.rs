@@ -97,19 +97,23 @@ pub async fn create_incident(
 
     // Spawn a background task for real-time AI parsing
     let panic_msg = payload.panic_message.clone();
+    let location_str = payload.location.clone();
+    let lat = payload.latitude;
+    let lng = payload.longitude;
     let state_clone = state.clone();
     let incident_id = incident.id;
 
     tokio::spawn(async move {
-        if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg).await {
+        if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg, &location_str, lat, lng).await {
             // Update the incident with AI results
             let update_res = sqlx::query_as::<_, Incident>(
-                "UPDATE incidents SET emergency_type = $1, severity = $2, details = $3, ai_advice = $4, updated_at = NOW() WHERE id = $5 RETURNING *"
+                "UPDATE incidents SET emergency_type = $1, severity = $2, details = $3, ai_advice = $4, hospital_contacts = $5, updated_at = NOW() WHERE id = $6 RETURNING *"
             )
             .bind(parsed.emergency_type)
             .bind(parsed.severity)
             .bind(parsed.details)
             .bind(parsed.ai_advice)
+            .bind(parsed.hospital_contacts)
             .bind(incident_id)
             .fetch_one(&state_clone.db)
             .await;

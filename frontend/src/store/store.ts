@@ -32,6 +32,7 @@ export interface Incident {
   latitude?: number;
   longitude?: number;
   ai_advice?: string;
+  hospital_contacts?: string;
   created_at: string;
   responder_id?: string;
 }

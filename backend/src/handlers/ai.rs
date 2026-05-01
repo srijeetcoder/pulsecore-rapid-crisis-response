@@ -146,26 +146,37 @@ pub struct ParsedEmergency {
     pub severity: String,
     pub details: String,
     pub ai_advice: String,
+    pub hospital_contacts: Option<String>,
 }
 
-pub async fn parse_emergency_data(panic_message: &str) -> Option<ParsedEmergency> {
+pub async fn parse_emergency_data(panic_message: &str, location: &str, lat: Option<f64>, lng: Option<f64>) -> Option<ParsedEmergency> {
     let keys = get_gemini_keys();
 
     if !keys.is_empty() {
-        let system_prompt = r#"You are a highly advanced Crisis Response AI. Analyze the provided panic message.
+        let location_context = if let (Some(la), Some(lo)) = (lat, lng) {
+            format!("Location: {} (Lat: {}, Lng: {})", location, la, lo)
+        } else {
+            format!("Location: {}", location)
+        };
+
+        let system_prompt = format!(r#"You are a highly advanced Crisis Response AI. Analyze the provided panic message from a user at {}.
 You must automatically understand the type of emergency based on keywords, properly describe the incident details, and provide actionable insight/advice.
 IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
+
+ADDITIONALLY: Provide a list of 2-3 nearby hospitals and their direct phone numbers based on the location provided. If the specific location is unknown, provide major emergency centers in the general region.
 Return ONLY valid JSON matching this exact schema:
-{
+{{
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",
   "severity": "critical" | "high" | "medium",
   "details": "A clear, professional summary of the incident details based on the user's keywords",
-  "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately)."
-}"#;
+  "ai_advice": "Immediate, concise actionable advice. ALWAYS mention relevant services in ALL CAPS (e.g., HOSPITAL, POLICE, AMBULANCE) along with their specific contact number (e.g., Call 108 immediately).",
+  "hospital_contacts": "A well-formatted string listing nearby hospitals and their phone numbers (e.g., '1. Ruby General Hospital: +91 33 6687 1800\\n2. Peerless Hospital: +91 33 4011 1222')"
+}}"#, location_context);
+
         let body = serde_json::json!({
             "systemInstruction": { "parts": [ { "text": system_prompt } ] },
             "contents": [{ "role": "user", "parts": [{ "text": panic_message }] }],
-            "generationConfig": { "responseMimeType": "application/json", "maxOutputTokens": 300, "temperature": 0.1 }
+            "generationConfig": { "responseMimeType": "application/json", "maxOutputTokens": 500, "temperature": 0.1 }
         });
 
         let client = Client::new();
@@ -218,5 +229,6 @@ Return ONLY valid JSON matching this exact schema:
         severity: "high".to_string(),
         details: panic_message.to_string(),
         ai_advice: advice.to_string(),
+        hospital_contacts: Some("1. Unified National Helpline: 112\n2. Local District Hospital: Contact 108 for nearest dispatch".to_string()),
     })
 }

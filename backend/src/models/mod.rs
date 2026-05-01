@@ -33,6 +33,7 @@ pub struct Incident {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
     pub ai_advice: Option<String>,
+    pub hospital_contacts: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub responder_id: Option<Uuid>,

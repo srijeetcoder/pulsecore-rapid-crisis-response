@@ -55,6 +55,10 @@ async fn main() {
         .execute(&pool)
         .await;
 
+    // Hospital contacts field for incidents
+    let _ = sqlx::query("ALTER TABLE incidents ADD COLUMN IF NOT EXISTS hospital_contacts TEXT")
+        .execute(&pool).await;
+
     // Profile fields for users
     let _ = sqlx::query("ALTER TABLE users ADD COLUMN IF NOT EXISTS occupation TEXT")
         .execute(&pool).await;
