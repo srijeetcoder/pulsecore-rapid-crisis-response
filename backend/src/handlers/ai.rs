@@ -149,7 +149,14 @@ pub struct ParsedEmergency {
     pub hospital_contacts: Option<String>,
 }
 
-pub async fn parse_emergency_data(panic_message: &str, location: &str, lat: Option<f64>, lng: Option<f64>) -> Option<ParsedEmergency> {
+pub async fn parse_emergency_data(
+    panic_message: &str, 
+    location: &str, 
+    lat: Option<f64>, 
+    lng: Option<f64>,
+    is_wounded: bool,
+    additional_details: Option<&str>
+) -> Option<ParsedEmergency> {
     let keys = get_gemini_keys();
 
     if !keys.is_empty() {
@@ -159,7 +166,15 @@ pub async fn parse_emergency_data(panic_message: &str, location: &str, lat: Opti
             format!("Location: {}", location)
         };
 
-        let system_prompt = format!(r#"You are a highly advanced Crisis Response AI. Analyze the provided panic message from a user at {}.
+        let situational_context = format!(
+            "Panic Message: {}\nIs Wounded: {}\nAdditional Context: {}", 
+            panic_message, 
+            if is_wounded { "YES" } else { "NO" },
+            additional_details.unwrap_or("None provided")
+        );
+
+        let system_prompt = format!(r#"You are a highly advanced Crisis Response AI. Analyze the situational data from a user at {}.
+{}
 You must automatically understand the type of emergency based on keywords, properly describe the incident details, and provide actionable insight/advice.
 IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
 

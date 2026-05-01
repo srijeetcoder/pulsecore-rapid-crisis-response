@@ -35,6 +35,8 @@ export interface Incident {
   hospital_contacts?: string;
   created_at: string;
   responder_id?: string;
+  is_wounded?: boolean;
+  additional_details?: string;
 }
 
 interface AppState {
@@ -53,7 +55,7 @@ interface AppState {
   addOrUpdateIncident: (incident: Incident) => void;
   removeIncidentLocally: (id: string) => void;
   fetchIncidents: () => Promise<void>;
-  triggerSOS: (location: string, panicMessage: string, lat: number | null, lng: number | null, guestName?: string) => Promise<void>;
+  triggerSOS: (location: string, panicMessage: string, lat: number | null, lng: number | null, guestName?: string, isWounded?: boolean, additionalDetails?: string) => Promise<void>;
   updateStatus: (id: string, status: string, emergency_type?: string) => Promise<void>;
   removeIncident: (id: string) => Promise<void>;
   guestLogin: () => Promise<void>;
@@ -144,7 +146,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
-  triggerSOS: async (location, panicMessage, lat, lng, guestName) => {
+  triggerSOS: async (location, panicMessage, lat, lng, guestName, isWounded, additionalDetails) => {
     const { token } = get();
     if (!token) return;
     try {
@@ -159,7 +161,9 @@ export const useStore = create<AppState>((set, get) => ({
           panic_message: panicMessage,
           latitude: lat,
           longitude: lng,
-          guest_name: guestName
+          guest_name: guestName,
+          is_wounded: isWounded,
+          additional_details: additionalDetails
         })
       });
     } catch (e) {

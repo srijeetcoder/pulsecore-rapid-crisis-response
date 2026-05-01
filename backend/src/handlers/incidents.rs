@@ -20,6 +20,8 @@ pub struct CreateIncidentRequest {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
     pub guest_name: Option<String>,
+    pub is_wounded: Option<bool>,
+    pub additional_details: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -69,7 +71,7 @@ pub async fn create_incident(
 
     // Create the incident immediately with a placeholder for AI advice
     let incident = sqlx::query_as::<_, Incident>(
-        "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *"
+        "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice, is_wounded, additional_details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *"
     )
     .bind(id)
     .bind(claims.sub)
@@ -81,6 +83,8 @@ pub async fn create_incident(
     .bind(payload.latitude)
     .bind(payload.longitude)
     .bind("📡 SYNCING_WITH_CRISIS_AI...")
+    .bind(payload.is_wounded.unwrap_or(false))
+    .bind(&payload.additional_details)
     .fetch_one(&state.db)
     .await
     .map_err(|e| {
@@ -103,8 +107,11 @@ pub async fn create_incident(
     let state_clone = state.clone();
     let incident_id = incident.id;
 
+    let additional_details = payload.additional_details.clone();
+    let is_wounded = payload.is_wounded.unwrap_or(false);
+
     tokio::spawn(async move {
-        if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg, &location_str, lat, lng).await {
+        if let Some(parsed) = crate::handlers::ai::parse_emergency_data(&panic_msg, &location_str, lat, lng, is_wounded, additional_details.as_deref()).await {
             // Update the incident with AI results
             let update_res = sqlx::query_as::<_, Incident>(
                 "UPDATE incidents SET emergency_type = $1, severity = $2, details = $3, ai_advice = $4, hospital_contacts = $5, updated_at = NOW() WHERE id = $6 RETURNING *"

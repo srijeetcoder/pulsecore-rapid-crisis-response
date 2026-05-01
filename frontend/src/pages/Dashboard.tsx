@@ -41,6 +41,8 @@ export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'severity' | 'type'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isWounded, setIsWounded] = useState(false);
+  const [additionalDetails, setAdditionalDetails] = useState('');
 
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
@@ -130,10 +132,12 @@ export const Dashboard = () => {
       }
     }
 
-    await triggerSOS(location, panicMessage, finalLat, finalLng, isPureGuest ? name : undefined);
+    await triggerSOS(location, panicMessage, finalLat, finalLng, isPureGuest ? name : undefined, isWounded, additionalDetails);
     setIsSOSOpen(false);
     setLocation('');
     setPanicMessage('');
+    setAdditionalDetails('');
+    setIsWounded(false);
     setGeocodeError('');
     setLat(null);
     setLng(null);
@@ -390,8 +394,22 @@ export const Dashboard = () => {
 
                           {incident.details && (
                             <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5 shadow-inner">
-                              <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Details</span>
+                              <span className="text-[10px] font-mono font-bold text-stardust uppercase tracking-widest mb-2 block">Incident Brief</span>
                               <p className="text-sm text-stardust leading-relaxed">{incident.details}</p>
+                              
+                              {incident.is_wounded && (
+                                <div className="mt-3 inline-flex items-center px-2 py-1 bg-red-500/10 border border-red-500/30 rounded text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
+                                  <ShieldAlert className="w-3 h-3 mr-1.5" />
+                                  Casualties / Wounded Reported
+                                </div>
+                              )}
+
+                              {incident.additional_details && (
+                                <div className="mt-4 pt-3 border-t border-white/5">
+                                  <span className="text-[9px] font-mono font-bold text-stardust/40 uppercase tracking-widest mb-1 block">Additional Context</span>
+                                  <p className="text-xs text-stardust/70 leading-relaxed italic">{incident.additional_details}</p>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -673,8 +691,31 @@ export const Dashboard = () => {
                     required
                     value={panicMessage}
                     onChange={(e) => setPanicMessage(e.target.value)}
-                    placeholder="Describe the situation for AI analysis..."
-                    className="input-terminal w-full h-32 resize-none"
+                    placeholder="Describe the main situation (e.g. fire, accident, medical)..."
+                    className="input-terminal w-full h-24 resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-4 p-4 bg-accent-secondary/5 border border-accent-secondary/20 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="wounded"
+                    checked={isWounded}
+                    onChange={(e) => setIsWounded(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-700 text-accent-secondary focus:ring-accent-secondary bg-void cursor-pointer"
+                  />
+                  <label htmlFor="wounded" className="text-sm font-heading font-bold text-white cursor-pointer select-none">
+                    Are you or any victim wounded?
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold text-stardust mb-3 uppercase tracking-widest">Additional Context (Optional)</label>
+                  <textarea
+                    value={additionalDetails}
+                    onChange={(e) => setAdditionalDetails(e.target.value)}
+                    placeholder="E.g. Number of people involved, visible threats, or specific landmarks nearby..."
+                    className="input-terminal w-full h-20 resize-none"
                   />
                 </div>
 
