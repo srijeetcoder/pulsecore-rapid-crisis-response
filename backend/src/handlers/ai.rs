@@ -179,9 +179,10 @@ You must automatically understand the type of emergency based on keywords, prope
 IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
 
 ADDITIONALLY: Provide a list of 2-3 most relevant emergency contacts based on the situation. 
-- If it's a crime/theft: Include nearby Police Stations and their direct numbers.
-- If it's medical: Include nearby Hospitals.
+- CRITICAL: If 'Is Wounded' is YES, you MUST include at least one nearby Hospital and its direct phone number, regardless of the incident type.
+- If it's a crime/theft: Include nearby Police Stations.
 - If it's fire: Include nearby Fire Stations.
+- If multiple services are needed (e.g., Fire + Wounded), provide a mix of both (e.g., 1 Fire Station, 1 Hospital).
 Use EXACTLY this format for each entry: '1. Service Name: Phone Number\n2. Next Service: Phone Number'. Do not add any other text.
 Return ONLY valid JSON matching this exact schema:
 {{
