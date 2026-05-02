@@ -134,6 +134,13 @@ export const Dashboard = () => {
 
     await triggerSOS(location, panicMessage, finalLat, finalLng, isPureGuest ? name : undefined, isWounded, additionalDetails);
     setIsSOSOpen(false);
+
+    if (searchParams.get('sos') === '1') {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('sos');
+      navigate({ search: newSearchParams.toString() }, { replace: true });
+    }
+
     setLocation('');
     setPanicMessage('');
     setAdditionalDetails('');

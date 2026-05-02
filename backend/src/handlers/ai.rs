@@ -181,6 +181,7 @@ IMPORTANT: You MUST always include the specific emergency contact number relevan
 ADDITIONALLY: Provide a list of 2-3 most relevant emergency contacts based on the exact user location provided. 
 - CRITICAL: You MUST provide the ACTUAL NAMES and EXACT WORKING PHONE NUMBERS of the nearest hospitals, police stations, or fire stations (based on the victim's location). Do not just output generic terms like 'HOSPITAL' or 'POLICE STATION'.
 - If 'Is Wounded' is YES: Include at least one nearby named Hospital and its direct phone number.
+- If 'Is Wounded' is NO: DO NOT include any Hospitals in the contact list.
 - If it's a crime/theft: Include nearby named Police Stations.
 - If it's fire: Include nearby named Fire Stations.
 - If multiple services are needed (e.g., Fire + Wounded), provide a mix of both.
