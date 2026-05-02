@@ -504,7 +504,7 @@ export const Dashboard = () => {
                               </div>
                               <div className="grid grid-cols-1 gap-3">
                                 {incident.hospital_contacts.split('\n').filter(line => line.trim()).map((line, idx) => {
-                                  const match = line.match(/^(?:\d+\.\s*)?(.*?)(?:\s*\|\s*(-?\d+\.\d+),\s*(-?\d+\.\d+))?:\s*(.*)$/);
+                                  const match = line.match(/^(?:\d+\.\s*)?(.*?)(?:\s*\|\s*(-?\d+\.\d+),\s*(-?\d+\.\d+))?[:\-]\s*(.*)$/);
                                   if (match) {
                                     const [, name, latStr, lngStr, phone] = match;
                                     const isPolice = name.toLowerCase().includes('police');

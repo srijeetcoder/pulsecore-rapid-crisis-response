@@ -179,13 +179,13 @@ You must automatically understand the type of emergency based on keywords, prope
 IMPORTANT: You MUST always include the specific emergency contact number relevant to the situation (e.g., Police: 100/112, Ambulance: 108, Fire: 101, Disaster: 1078) in the 'ai_advice' field.
 
 ADDITIONALLY: Provide a list of 2-3 most relevant emergency contacts based on the exact user location provided. 
-- CRITICAL: You MUST provide the ACTUAL NAMES and EXACT WORKING PHONE NUMBERS of the nearest hospitals, police stations, or fire stations (based on the victim's location). Do not just output generic terms like 'HOSPITAL' or 'POLICE STATION'.
-- If 'Is Wounded' is YES: Include at least one nearby named Hospital and its direct phone number.
+- CRITICAL: You MUST provide the ACTUAL NAMES of the nearest facilities (e.g., "City General Hospital", "Station 4 Fire Dept"). 
+- NEVER output generic terms like 'HOSPITAL', 'FIRE STATION', or 'AMBULANCE' as the name. 
+- If 'Is Wounded' is YES: You MUST include at least one specific NAMED Hospital and its coordinates.
 - If 'Is Wounded' is NO: DO NOT include any Hospitals in the contact list.
-- If it's a crime/theft: Include nearby named Police Stations.
-- If it's fire: Include nearby named Fire Stations.
-- If multiple services are needed (e.g., Fire + Wounded), provide a mix of both.
-Use EXACTLY this format for each entry: '1. [Actual Facility Name] | [Latitude],[Longitude]: [Exact Phone Number]\n2. [Next Facility Name] | [Latitude],[Longitude]: [Exact Phone Number]'. Do not add any other text.
+- For EACH entry, you MUST find its real-world latitude and longitude.
+- Use EXACTLY this format: '1. [Facility Name] | [Lat],[Lng]: [Phone Number]'.
+- Example: '1. Apollo Hospital | 22.5678,88.3456: 033-12345678'
 Return ONLY valid JSON matching this exact schema:
 {{
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",
@@ -251,6 +251,6 @@ Return ONLY valid JSON matching this exact schema:
         severity: "high".to_string(),
         details: panic_message.to_string(),
         ai_advice: advice.to_string(),
-        hospital_contacts: Some("1. Police Support: 100\n2. Ambulance Dispatch: 108\n3. Unified Emergency: 112".to_string()),
+        hospital_contacts: Some("1. Emergency Response Center | 22.5726,88.3639: 112\n2. Central Ambulance Service | 22.5693,88.4509: 108".to_string()),
     })
 }
