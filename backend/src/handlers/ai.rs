@@ -185,7 +185,7 @@ ADDITIONALLY: Provide a list of 2-3 most relevant emergency contacts based on th
 - If it's a crime/theft: Include nearby named Police Stations.
 - If it's fire: Include nearby named Fire Stations.
 - If multiple services are needed (e.g., Fire + Wounded), provide a mix of both.
-Use EXACTLY this format for each entry: '1. [Actual Facility Name]: [Exact Phone Number]\n2. [Next Facility Name]: [Exact Phone Number]'. Do not add any other text.
+Use EXACTLY this format for each entry: '1. [Actual Facility Name] | [Latitude],[Longitude]: [Exact Phone Number]\n2. [Next Facility Name] | [Latitude],[Longitude]: [Exact Phone Number]'. Do not add any other text.
 Return ONLY valid JSON matching this exact schema:
 {{
   "emergency_type": "Medical" | "Fire" | "Security" | "Natural Disaster" | "Other",

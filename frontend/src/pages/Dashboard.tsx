@@ -24,6 +24,22 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
   return null;
 }
 
+const createCustomIcon = (type: 'police' | 'fire' | 'hospital') => {
+  const colorClass = type === 'police' ? 'bg-blue-500 shadow-blue-500/50' :
+                     type === 'fire' ? 'bg-orange-500 shadow-orange-500/50' :
+                     'bg-red-500 shadow-red-500/50';
+  
+  return L.divIcon({
+    className: 'custom-leaflet-icon',
+    html: `<div class="w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white ${colorClass}">
+             <div class="w-2 h-2 bg-white rounded-full animate-ping"></div>
+           </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+};
+
 export const Dashboard = () => {
   const { incidents, user, token, fetchIncidents, triggerSOS, updateStatus, removeIncident, isRegistrationPopupOpen, setRegistrationPopupOpen, guestLogin, toggleRespond, setActiveChatIncidentId } = useStore();
   const [searchParams] = useSearchParams();
@@ -43,6 +59,7 @@ export const Dashboard = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isWounded, setIsWounded] = useState(false);
   const [additionalDetails, setAdditionalDetails] = useState('');
+  const [selectedFacility, setSelectedFacility] = useState<{name: string, lat: number, lng: number, type: 'police' | 'fire' | 'hospital'} | null>(null);
 
   const isAuthority = user?.role === 'responder' || user?.role === 'staff';
   const isGuest = user?.role === 'guest';
@@ -291,7 +308,16 @@ export const Dashboard = () => {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                <ChangeView center={center} zoom={zoom} />
+                <ChangeView center={selectedFacility ? [selectedFacility.lat, selectedFacility.lng] : center} zoom={selectedFacility ? 15 : zoom} />
+                  {selectedFacility && (
+                    <Marker position={[selectedFacility.lat, selectedFacility.lng]} icon={createCustomIcon(selectedFacility.type)}>
+                      <Popup>
+                        <div className="text-gray-900 font-sans font-bold">
+                          {selectedFacility.name}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
                 {activeIncidents.map((inc) => (
                   inc.latitude && inc.longitude ? (
                     <Marker key={inc.id} position={[inc.latitude, inc.longitude]}>
@@ -478,14 +504,24 @@ export const Dashboard = () => {
                               </div>
                               <div className="grid grid-cols-1 gap-3">
                                 {incident.hospital_contacts.split('\n').filter(line => line.trim()).map((line, idx) => {
-                                  const match = line.match(/^(?:\d+\.\s*)?(.*?):\s*(.*)$/);
+                                  const match = line.match(/^(?:\d+\.\s*)?(.*?)(?:\s*\|\s*(-?\d+\.\d+),\s*(-?\d+\.\d+))?:\s*(.*)$/);
                                   if (match) {
-                                    const [, name, phone] = match;
+                                    const [, name, latStr, lngStr, phone] = match;
                                     const isPolice = name.toLowerCase().includes('police');
                                     const isFire = name.toLowerCase().includes('fire');
+                                    const type = isPolice ? 'police' : isFire ? 'fire' : 'hospital';
                                     
                                     return (
-                                      <div key={idx} className="bg-void/40 border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-accent-secondary/30 transition-all hover:bg-accent-secondary/[0.02]">
+                                      <div 
+                                        key={idx} 
+                                        onClick={() => {
+                                          if (latStr && lngStr) {
+                                            setSelectedFacility({ name: name.trim(), lat: parseFloat(latStr), lng: parseFloat(lngStr), type });
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                          }
+                                        }}
+                                        className={`bg-void/40 border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-accent-secondary/30 transition-all hover:bg-accent-secondary/[0.02] ${latStr && lngStr ? 'cursor-pointer' : ''}`}
+                                      >
                                         <div className="flex items-center space-x-4">
                                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shadow-lg transition-transform group-hover:scale-110 ${
                                             isPolice ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-blue-500/5' :
