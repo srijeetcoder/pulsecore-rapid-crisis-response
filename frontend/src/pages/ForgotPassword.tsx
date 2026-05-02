@@ -52,13 +52,12 @@ export const ForgotPassword = () => {
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       <Link 
         to="/" 
-        className="absolute top-8 left-8 btn-ghost !px-5 !py-2.5 !text-[10px] font-mono uppercase tracking-[0.2em]"
+        className="absolute top-4 sm:top-8 left-4 sm:left-8 btn-ghost !px-5 !py-2.5 !text-[10px] font-mono uppercase tracking-[0.2em]"
       >
         <Home className="w-4 h-4 mr-2" />
         HOME
       </Link>
-
-      <div className="max-w-md w-full space-y-10 card-terminal !p-10 relative z-10">
+      <div className="max-w-md w-full space-y-8 sm:space-y-10 card-terminal !p-6 sm:!p-10 relative z-10 mx-auto">
         <div className="text-center">
           <div className="relative inline-block mb-6">
             <KeyRound className="h-14 w-14 text-accent-primary mx-auto" />

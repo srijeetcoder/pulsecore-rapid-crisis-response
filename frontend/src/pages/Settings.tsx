@@ -95,18 +95,18 @@ export const Settings = () => {
             <p className="text-stardust max-w-md mx-auto mb-10 leading-relaxed">
               You are currently browsing the network anonymously. To save personal details, manage your emergency contacts, or change system preferences, please log in or create a full account.
             </p>
-            <div className="flex justify-center space-x-6">
-              <Link to="/login" className="btn-outline !px-10 !py-4 uppercase tracking-widest text-xs font-mono">
+            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <Link to="/login" className="btn-outline w-full sm:w-auto !px-10 !py-4 uppercase tracking-widest text-xs font-mono">
                 Log In
               </Link>
-              <Link to="/login" state={{ isRegister: true }} className="btn-primary !px-10 !py-4 uppercase tracking-widest text-xs font-mono">
+              <Link to="/login" state={{ isRegister: true }} className="btn-primary w-full sm:w-auto !px-10 !py-4 uppercase tracking-widest text-xs font-mono">
                 Create Account
               </Link>
             </div>
           </div>
         ) : (
           <div className="card-terminal !p-0 overflow-hidden shadow-2xl relative z-10">
-            <div className="p-10 border-b border-white/5 flex items-center space-x-6 bg-white/2">
+            <div className="p-6 sm:p-10 border-b border-white/5 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left space-y-4 sm:space-y-0 sm:space-x-6 bg-white/2">
               <div className="h-24 w-24 rounded-2xl bg-accent-primary/10 flex items-center justify-center border border-accent-primary/30 shadow-lg shadow-accent-primary/10">
                 <UserCircle className="h-14 w-14 text-accent-primary" />
               </div>
@@ -119,7 +119,7 @@ export const Settings = () => {
               </div>
             </div>
 
-            <div className="p-10">
+            <div className="p-6 sm:p-10">
               <h2 className="text-xl font-heading font-bold mb-8 uppercase tracking-widest text-white/80 border-l-4 border-accent-primary pl-6">Profile_Configuration</h2>
               <form onSubmit={handleSave} className="space-y-8">
                 {success && <div className="p-4 font-mono text-[10px] bg-green-500/10 border border-green-500/30 text-green-500 rounded-lg uppercase tracking-widest text-center">{success}</div>}
@@ -201,18 +201,18 @@ export const Settings = () => {
                   </Link>
                 </div>
 
-                <div className="pt-8 flex items-center justify-between border-t border-white/5">
+                <div className="pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-white/5 space-y-4 sm:space-y-0">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="btn-primary !px-12 !py-4.5 !text-[10px] font-mono uppercase tracking-[0.2em] shadow-xl shadow-accent-primary/10"
+                    className="btn-primary w-full sm:w-auto !px-12 !py-4.5 !text-[10px] font-mono uppercase tracking-[0.2em] shadow-xl shadow-accent-primary/10"
                   >
                     {loading ? 'SYNCHRONIZING...' : 'COMMIT_CHANGES'}
                   </button>
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="btn-ghost !px-8 !py-4 !border-accent-primary/20 hover:!border-accent-primary/50 !text-accent-primary !text-[10px] font-mono uppercase tracking-[0.2em]"
+                    className="btn-ghost w-full sm:w-auto !px-8 !py-4 !border-accent-primary/20 hover:!border-accent-primary/50 !text-accent-primary !text-[10px] font-mono uppercase tracking-[0.2em]"
                   >
                     <LogOut className="h-4 w-4 mr-3" />
                     Logout

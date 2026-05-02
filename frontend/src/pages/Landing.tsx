@@ -91,7 +91,7 @@ export const Landing = () => {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
-                  <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
+                  <span className="hidden sm:block font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
                 </div>
               </Link>
               <div className="hidden md:flex space-x-1">
@@ -100,7 +100,7 @@ export const Landing = () => {
                 <Link to="/contact" className="btn-ghost font-mono text-xs uppercase tracking-widest">Support</Link>
               </div>
             </div>
-            <div className="flex space-x-6 items-center">
+            <div className="flex space-x-3 sm:space-x-6 items-center">
               {!token ? (
                 <>
                   <Link to="/login" className="font-mono text-xs text-stardust hover:text-white uppercase tracking-widest transition-colors">
@@ -148,24 +148,24 @@ export const Landing = () => {
               <ShieldCheck className="w-4 h-4 mr-2" />
               Emergency Response Core
             </div>
-            <h1 className="text-5xl md:text-8xl font-heading font-bold tracking-tighter mb-10 leading-[1.1] max-w-5xl">
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-heading font-bold tracking-tighter mb-10 leading-[1.1] max-w-5xl">
               Next-Gen Crisis <span className="text-gradient-accent">Response Synchronization</span>
             </h1>
             <p className="mt-4 max-w-2xl text-xl text-stardust font-body leading-relaxed mb-12">
               The premier synchronized security layer for emergency management, real-time threat intelligence, and community resilience.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center items-center space-y-6 sm:space-y-0 sm:space-x-8">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8 w-full max-w-md sm:max-w-none mx-auto">
               <button
                 onClick={handleEmergency}
-                className="btn-danger !px-12 !py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
+                className="btn-danger w-full sm:w-auto !px-8 sm:!px-12 !py-4 sm:!py-5 text-lg shadow-red-500/20 shadow-2xl flex items-center justify-center transform transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95"
               >
                 <Activity className="mr-3 h-6 w-6 animate-pulse" />
                 Report Emergency
               </button>
               <Link
                 to={token ? "/dashboard" : "/login"}
-                className="btn-outline !px-12 !py-5 text-lg transform transition-all duration-300 hover:scale-[1.02] hover:bg-white/5 active:scale-95 flex items-center justify-center"
+                className="btn-outline w-full sm:w-auto !px-8 sm:!px-12 !py-4 sm:!py-5 text-lg transform transition-all duration-300 hover:scale-[1.02] hover:bg-white/5 active:scale-95 flex items-center justify-center"
               >
                 Enter Dashboard
                 <ArrowRight className="ml-3 w-5 h-5" />
@@ -217,7 +217,7 @@ export const Landing = () => {
 
       <div className="bg-dark-matter/50 border-y border-white/5 py-20 backdrop-blur-sm relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
             <div className="group">
               <div className="font-mono text-5xl font-bold text-accent-primary mb-3 transition-transform group-hover:scale-110">2.5s</div>
               <div className="font-mono text-stardust uppercase tracking-[0.2em] text-[10px] font-bold">Data Synchronization</div>

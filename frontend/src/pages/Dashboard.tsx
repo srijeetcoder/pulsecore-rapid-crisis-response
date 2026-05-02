@@ -225,7 +225,7 @@ export const Dashboard = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center"
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
         >
           <div className="flex items-center space-x-3">
             <Link
@@ -236,7 +236,7 @@ export const Dashboard = () => {
               HOME
             </Link>
             <div>
-              <h1 className="text-3xl font-heading font-bold text-gradient-accent">{isAuthority ? 'Command Center' : 'Network Emergencies'}</h1>
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gradient-accent">{isAuthority ? 'Command Center' : 'Network Emergencies'}</h1>
               <p className="text-stardust font-mono text-xs uppercase tracking-widest mt-1">
                 Real-time Active Units
                 {user?.role === 'guest' && (
@@ -304,8 +304,8 @@ export const Dashboard = () => {
             {/* Incidents List */}
             <div className="card-terminal shadow-xl">
               <div className="flex flex-col space-y-6 mb-8">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-heading font-bold text-white">Active Incidents</h2>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <h2 className="text-xl sm:text-2xl font-heading font-bold text-white">Active Incidents</h2>
                   {isAuthority && incidents.some(i => i.status === 'resolved') && (
                     <span className="font-mono text-[10px] text-stardust uppercase tracking-widest">
                       Resolved reports archived
@@ -363,8 +363,8 @@ export const Dashboard = () => {
                         }`}
                     >
                       <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-accent-primary/20 uppercase tracking-widest">ID_{incident.id.slice(-6)}</div>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2 flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row items-start md:justify-between gap-4">
+                        <div className="space-y-2 w-full flex-1 min-w-0">
                           <div className="flex items-center flex-wrap gap-2">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${incident.severity === 'critical' ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/50 neon-text-red' :
                                 incident.severity === 'high' ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/50 neon-text-purple' :
@@ -515,7 +515,7 @@ export const Dashboard = () => {
                           )}
                         </div>
 
-                        <div className="flex flex-col space-y-2 ml-4 shrink-0">
+                        <div className="flex flex-row md:flex-col flex-wrap space-x-2 md:space-x-0 space-y-0 md:space-y-2 md:ml-4 shrink-0 w-full md:w-auto">
                           <select
                             value={incident.status}
                             onChange={(e) => updateStatus(incident.id, e.target.value, incident.emergency_type)}

@@ -12,7 +12,7 @@ export const Contact = () => {
             <ShieldAlert className="h-8 w-8 text-accent-secondary transition-transform group-hover:scale-110" />
             <div className="flex flex-col leading-none">
               <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
-              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
+              <span className="hidden sm:block font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
             </div>
           </Link>
           <Link
@@ -27,7 +27,7 @@ export const Contact = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-24">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-6 tracking-tighter">Contact <span className="text-gradient-accent">Support</span></h1>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-heading font-bold mb-6 tracking-tighter">Contact <span className="text-gradient-accent">Support</span></h1>
           <p className="text-xl text-stardust max-w-2xl mx-auto leading-relaxed">Direct synchronization channel for network support and platform partnerships.</p>
         </div>
 
@@ -43,7 +43,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-mono text-[10px] text-stardust font-bold uppercase tracking-[0.2em] mb-2">Comms_Channel</p>
-                    <p className="text-lg font-heading font-bold text-white">support.pulsecore@gmail.com</p>
+                    <p className="text-base sm:text-lg font-heading font-bold text-white break-all sm:break-normal">support.pulsecore@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-6">
@@ -52,7 +52,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-mono text-[10px] text-stardust font-bold uppercase tracking-[0.2em] mb-2">Hotline_Sync</p>
-                    <p className="text-lg font-heading font-bold text-white">+91 XXXXX XXXXX</p>
+                    <p className="text-base sm:text-lg font-heading font-bold text-white">+91 XXXXX XXXXX</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-6">
@@ -61,7 +61,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-mono text-[10px] text-stardust font-bold uppercase tracking-[0.2em] mb-2">Root_Location</p>
-                    <p className="text-lg font-heading font-bold text-white leading-relaxed">
+                    <p className="text-base sm:text-lg font-heading font-bold text-white leading-relaxed">
                       Garia, Kolkata, WB - 700084, India
                     </p>
                   </div>

@@ -12,7 +12,7 @@ export const About = () => {
             <ShieldAlert className="h-8 w-8 text-accent-secondary transition-transform group-hover:scale-110" />
             <div className="flex flex-col leading-none">
               <span className="font-heading font-bold text-xl tracking-tight uppercase">PulseCore</span>
-              <span className="font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
+              <span className="hidden sm:block font-mono text-[9px] text-accent-primary font-bold uppercase tracking-[0.3em]">Crisis Response Network</span>
             </div>
           </Link>
           <Link 
@@ -27,7 +27,7 @@ export const About = () => {
 
       <div className="max-w-5xl mx-auto px-4 py-16">
         <div className="text-center mb-24">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-8 tracking-tighter">About <span className="text-gradient-accent">The System</span></h1>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-heading font-bold mb-8 tracking-tighter">About <span className="text-gradient-accent">The System</span></h1>
           <p className="text-xl text-stardust max-w-3xl mx-auto leading-relaxed">
             We are engineering a high-precision security layer to bridge the gap between crisis reporting and synchronized response systems.
           </p>
@@ -47,7 +47,7 @@ export const About = () => {
             <p className="text-stardust leading-relaxed text-lg">
               In a crisis, synchronization is the ultimate security. Traditional response systems suffer from latency and fragmentation. Our platform provides a unified, real-time network that empowers guests, staff, and responders to operate as a single, hardened unit.
             </p>
-            <div className="grid grid-cols-2 gap-6 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
               <div className="card-terminal !p-6">
                 <Users className="text-accent-primary w-8 h-8 mb-4" />
                 <h4 className="font-heading font-bold text-sm uppercase tracking-widest">System Synergy</h4>
@@ -60,7 +60,7 @@ export const About = () => {
           </div>
         </div>
 
-        <div className="card-terminal !p-16 shadow-2xl relative overflow-hidden">
+        <div className="card-terminal !p-8 sm:!p-16 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-accent-primary/5 rounded-full blur-[120px] -mr-48 -mt-48"></div>
           <h2 className="text-4xl font-heading font-bold mb-16 text-center uppercase tracking-widest">Core Pillars</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
