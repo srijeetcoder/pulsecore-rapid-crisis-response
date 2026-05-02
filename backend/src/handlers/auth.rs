@@ -233,6 +233,21 @@ pub async fn cleanup_guest(
         return Err(AppError::Unauthorized("Only temporary guests can be cleaned up".to_string()));
     }
 
+    // Check if the guest has reported any incidents
+    let incident_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM incidents WHERE reporter_id = $1")
+        .bind(claims.sub)
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap_or(0);
+
+    // If the guest reported an emergency, we must NOT delete their account or their incidents.
+    // The responder dashboard needs this data to persist.
+    if incident_count > 0 {
+        tx.commit().await.map_err(|_| AppError::InternalServerError("Failed to commit transaction".to_string()))?;
+        println!("🛡️ Preserved temporary guest account {} because they reported an incident", claims.sub);
+        return Ok(Json(serde_json::json!({ "status": "success", "message": "Guest account preserved due to active incidents" })));
+    }
+
     // 1. Delete messages associated with guest incidents
     sqlx::query("DELETE FROM messages WHERE incident_id IN (SELECT id FROM incidents WHERE reporter_id = $1)")
         .bind(claims.sub)

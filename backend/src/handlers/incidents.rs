@@ -69,6 +69,21 @@ pub async fn create_incident(
 
     let id = Uuid::new_v4();
 
+    let enriched_additional_details = if claims.role == "guest" {
+        if let Some(name) = &payload.guest_name {
+            if !name.trim().is_empty() {
+                let current_details = payload.additional_details.as_deref().unwrap_or("None provided");
+                Some(format!("Reported by Guest: {}. Additional Info: {}", name, current_details))
+            } else {
+                payload.additional_details.clone()
+            }
+        } else {
+            payload.additional_details.clone()
+        }
+    } else {
+        payload.additional_details.clone()
+    };
+
     // Create the incident immediately with a placeholder for AI advice
     let incident = sqlx::query_as::<_, Incident>(
         "INSERT INTO incidents (id, reporter_id, location, status, severity, emergency_type, details, latitude, longitude, ai_advice, is_wounded, additional_details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *"
@@ -84,7 +99,7 @@ pub async fn create_incident(
     .bind(payload.longitude)
     .bind("📡 SYNCING_WITH_CRISIS_AI...")
     .bind(payload.is_wounded.unwrap_or(false))
-    .bind(&payload.additional_details)
+    .bind(&enriched_additional_details)
     .fetch_one(&state.db)
     .await
     .map_err(|e| {
@@ -107,7 +122,7 @@ pub async fn create_incident(
     let state_clone = state.clone();
     let incident_id = incident.id;
 
-    let additional_details = payload.additional_details.clone();
+    let additional_details = enriched_additional_details.clone();
     let is_wounded = payload.is_wounded.unwrap_or(false);
 
     tokio::spawn(async move {
